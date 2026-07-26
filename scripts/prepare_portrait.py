@@ -26,10 +26,19 @@ SITE_ROOT = Path(__file__).resolve().parents[1]
 MASTER = Path.home() / "OneDrive" / "Pictures" / "Greg.jpg"
 OUT = SITE_ROOT / "src" / "assets" / "portrait.jpeg"
 
-# 4:5 crop chosen by inspection against the 1056x976 master: eyes land just
-# above the 42% line, the head keeps its margins, and the jacket stays in frame
-# at the bottom left. Aspect must remain 4:5 to match the frame in Hero.astro.
-CROP_BOX = (102, 68, 827, 975)
+# 4:5 crop against the 1056x976 master, using the full height of the source.
+#
+# The top edge sits at row 0 on purpose. The master itself already clips the top
+# of his hair — row 0 carries ~276 hair pixels across x 347-622 — so this is as
+# much hair as the photograph contains; there is nothing above it to recover.
+#
+# Horizontally the box is centred on the head, which spans x 153-802, leaving
+# 66px of backdrop on the left and 65px on the right. Taking the full height
+# does put the eye line at ~46% rather than the more conventional 40%, which is
+# the trade for keeping the hair intact.
+#
+# Aspect must remain 4:5 to match the frame in Hero.astro.
+CROP_BOX = (87, 0, 867, 976)
 
 
 def main() -> None:
