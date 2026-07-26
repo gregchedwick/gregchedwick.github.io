@@ -258,7 +258,36 @@ const nav = [
       }
       .site-nav a:hover { color: var(--ink); }
 
-      /* Desktop: an inline row in the header bar. */
+      /*
+        Base state is the mobile one, and it must be declared BEFORE the media
+        queries below. These rules carry the same specificity, so whichever
+        comes last wins — with the base block sitting after the desktop query,
+        `display: grid` overrode `display: none` and the button appeared on
+        desktop, where tapping it did nothing because the panel styles it drives
+        live in the mobile query.
+      */
+      .nav-toggle {
+        display: grid;
+        place-items: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--ink-secondary);
+        cursor: pointer;
+        transition: color 0.15s ease, border-color 0.15s ease;
+      }
+      .nav-toggle:hover {
+        color: var(--ink);
+        border-color: var(--border-strong);
+      }
+      .nav-toggle__close { display: none; }
+      .nav-toggle[aria-expanded='true'] .nav-toggle__open { display: none; }
+      .nav-toggle[aria-expanded='true'] .nav-toggle__close { display: block; }
+
+      /* Desktop: an inline row in the header bar, no disclosure button. */
       @media (min-width: 48rem) {
         .site-nav {
           display: flex;
@@ -295,27 +324,6 @@ const nav = [
         .site-nav a:hover,
         .site-nav a:focus-visible { background: var(--accent-wash); }
       }
-
-      .nav-toggle {
-        display: grid;
-        place-items: center;
-        width: 2.25rem;
-        height: 2.25rem;
-        padding: 0;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        background: transparent;
-        color: var(--ink-secondary);
-        cursor: pointer;
-        transition: color 0.15s ease, border-color 0.15s ease;
-      }
-      .nav-toggle:hover {
-        color: var(--ink);
-        border-color: var(--border-strong);
-      }
-      .nav-toggle__close { display: none; }
-      .nav-toggle[aria-expanded='true'] .nav-toggle__open { display: none; }
-      .nav-toggle[aria-expanded='true'] .nav-toggle__close { display: block; }
 
       .theme-toggle {
         display: grid;

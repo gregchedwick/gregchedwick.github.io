@@ -75,6 +75,31 @@ toggle?.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 doc.body.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 check('closes on outside click', toggle?.getAttribute('aria-expanded') === 'false');
 
+/*
+ * Cascade order, checked against the compiled CSS.
+ *
+ * jsdom has no layout or media-query evaluation, so every assertion above
+ * passed while the button was still visible on desktop: the base rule sat
+ * after the desktop media query, and at equal specificity the later rule won.
+ * The button showed on desktop and did nothing, because the panel styles it
+ * drives are declared in the mobile query.
+ */
+const cssHref = doc.querySelector('link[rel="stylesheet"]')?.getAttribute('href');
+if (cssHref) {
+  const css = readFileSync(`${DIST}${cssHref.replace(/^\//, '')}`, 'utf8');
+  const rules = [...css.matchAll(/\.nav-toggle\[data-astro-cid-\w+\]\{([^}]*)\}/g)];
+  const base = rules.find((m) => m[1].includes('display:grid'));
+  const hide = rules.find((m) => m[1].trim() === 'display:none');
+
+  check('base toggle rule found in CSS', Boolean(base));
+  check('desktop hide rule found in CSS', Boolean(hide));
+  check(
+    'desktop hide is declared after the base rule',
+    Boolean(base && hide) && hide.index > base.index,
+    `base@${base?.index} hide@${hide?.index}`,
+  );
+}
+
 console.log();
 if (failures.length) {
   console.error(`${failures.length} FAILED:\n  ` + failures.join('\n  '));
