@@ -32,10 +32,9 @@ import { profile } from '../data/resume';
 
     <div class="hero__portrait">
       {/*
-        portrait.jpeg is a 4:5 crop of Pictures/Greg 3.jpeg — crop box
-        (406, 250, 2414, 2760) on the 3000x2760 master, which puts the eyes on
-        the 40% line and centres the face. Re-crop from the master if it ever
-        needs adjusting; the aspect must stay 4:5 to match the frame below.
+        portrait.jpeg is a 4:5 crop of Pictures/Greg.jpg, produced by
+        scripts/prepare_portrait.py — adjust the crop box there, not here. The
+        aspect must stay 4:5 to match the frame below.
 
         `width` pins the plain `src` fallback to 640px. Without it Astro points
         src at the full-size original — a needless download for a 20rem slot.
