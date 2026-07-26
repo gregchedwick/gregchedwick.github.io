@@ -616,9 +616,15 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
      room, and body copy elsewhere does not. */
   .netflix > .container { max-width: 1360px; }
 
-  /* The intro spans the full dashboard width rather than the usual reading
-     measure, so it sits over both columns instead of stopping mid-page. */
+  /* Two thirds of the dashboard width: wider than the usual reading measure so
+     it carries across the columns, but short of the full 1360px, where the line
+     runs to ~150 characters and gets tiring to read. Full width below the
+     breakpoint, where two thirds would leave it cramped. */
   .netflix .section__intro { max-width: none; }
+
+  @media (min-width: 60rem) {
+    .netflix .section__intro { max-width: 66.67%; }
+  }
 
   /* Single column while narrow; DOM order (filters, titles, genres, weights)
      is already the right reading order there. */
