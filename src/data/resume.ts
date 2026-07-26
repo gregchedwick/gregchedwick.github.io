@@ -76,7 +76,7 @@ export const profile = {
     'Senior analytics professional with 20+ years in data analytics and 6+ years leading analytics ' +
     'initiatives, spanning software licensing, mortgage and consumer lending, advertising, supply ' +
     'chain, and freight. I design scalable metrics, build dashboards that drive decisions, and automate ' +
-    'the ad-hoc work that quietly eats teams alive — most recently with AI agents built in Copilot ' +
+    'the manual work that quietly eats teams alive — most recently with AI agents built in Copilot ' +
     'Studio. I do my best work in ambiguous 0-to-1 territory with minimal oversight.',
 } as const;
 
