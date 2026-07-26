@@ -29,26 +29,33 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
       stayed relevant. These charts run on the real output of that analysis — not screenshots.
     </p>
 
-    <!-- Filters sit in one row above the charts. -->
+    <!--
+      Filters sit above the charts, boxed to the width of a single panel. The
+      outer grid mirrors the panels grid so column 1 lines up exactly; auto-fill
+      rather than auto-fit, so the empty tracks hold their width instead of
+      collapsing and letting the filters stretch across the whole row.
+    -->
     <div class="controls">
-      <fieldset class="control">
-        <legend class="control__label">Rank by</legend>
-        <div class="segmented" role="group">
-          <button type="button" data-sort="score" aria-pressed="true">Opportunity score</button>
-          <button type="button" data-sort="hoursViewed" aria-pressed="false">Hours viewed</button>
-          <button type="button" data-sort="weeksInTop10" aria-pressed="false">Weeks in top 10</button>
-        </div>
-      </fieldset>
+      <div class="controls__inner">
+        <fieldset class="control">
+          <legend class="control__label">Rank by</legend>
+          <div class="segmented" role="group">
+            <button type="button" data-sort="score" aria-pressed="true">Opportunity score</button>
+            <button type="button" data-sort="hoursViewed" aria-pressed="false">Hours viewed</button>
+            <button type="button" data-sort="weeksInTop10" aria-pressed="false">Weeks in top 10</button>
+          </div>
+        </fieldset>
 
-      <label class="control control--count">
-        <span class="control__label">Show top</span>
-        <select data-count>
-          <option value="8">8</option>
-          <option value="12" selected>12</option>
-          <option value="20">20</option>
-          <option value="30">30</option>
-        </select>
-      </label>
+        <label class="control control--count">
+          <span class="control__label">Show top</span>
+          <select data-count>
+            <option value="8">8</option>
+            <option value="12" selected>12</option>
+            <option value="20">20</option>
+            <option value="30">30</option>
+          </select>
+        </label>
+      </div>
     </div>
 
     <div class="panels">
@@ -390,12 +397,20 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
 
   /* ---------- controls ---------- */
 
+  /* Same track sizing as .panels, so the filters occupy exactly column 1. */
   .controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
     gap: var(--space-md);
     margin-bottom: var(--space-lg);
+  }
+
+  .controls__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    min-width: 0;
   }
 
   .control {
@@ -403,6 +418,7 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     padding: 0;
     margin: 0;
     min-width: 0;
+    width: 100%;
   }
 
   .control__label {
@@ -416,14 +432,18 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     margin-bottom: var(--space-2xs);
   }
 
+  /* flex, not inline-flex: inline-flex sizes to max-content and would push past
+     the column instead of wrapping the options onto a second line. */
   .segmented {
-    display: inline-flex;
+    display: flex;
     flex-wrap: wrap;
     gap: 2px;
     padding: 2px;
     background: var(--gridline);
     border-radius: var(--radius-sm);
   }
+
+  .segmented button { flex: 1 1 auto; }
 
   .segmented button {
     padding: 0.4rem var(--space-sm);
@@ -510,14 +530,15 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     counter-reset: rank;
   }
 
-  /* One geometry for both charts. In three narrow columns the label has to give
-     up room or the bar has none left to encode with. */
+  /* Label above the bar, not beside it. Beside it, a third-width panel left the
+     label ~168px — fine for "Science Fiction" but it cut most film titles in
+     half, which is exactly the difference between the two panels. Stacking
+     gives the label the full width and the bar the full width too. */
   .bar-row {
     display: grid;
-    grid-template-columns: minmax(0, 10.5rem) 1fr;
-    align-items: center;
-    gap: var(--space-sm);
-    padding: 3px var(--space-2xs);
+    grid-template-columns: 1fr;
+    gap: 5px;
+    padding: 2px var(--space-2xs) 4px;
     border-radius: var(--radius-sm);
     cursor: default;
     transition: background 0.12s ease;
@@ -559,12 +580,28 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     min-width: 3px;
     /* 4px rounded data-end, anchored flat to the baseline at the origin. */
     border-radius: 0 4px 4px 0;
-    background: var(--accent);
     transform-origin: left center;
     animation: bar-grow 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
+  /* The genre panel's lighter fill, now used by both charts. It sits at 2.9:1
+     on the light surface — legal here only because every bar carries a visible
+     value label, which is the documented relief for a sub-3:1 fill. The dark
+     mode step is chosen against the dark surface rather than reused, since
+     --seq-350 there is 2.6:1 and would be worse, not better. */
+  .bar-row__bar,
   .bar-row__bar--alt { background: var(--seq-350); }
+
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme='light'])) .bar-row__bar,
+    :root:where(:not([data-theme='light'])) .bar-row__bar--alt {
+      background: var(--seq-550);
+    }
+  }
+  :root[data-theme='dark'] .bar-row__bar,
+  :root[data-theme='dark'] .bar-row__bar--alt {
+    background: var(--seq-550);
+  }
 
   @keyframes bar-grow {
     from { transform: scaleX(0); }
@@ -581,8 +618,6 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
   }
 
   .bar-row__meta {
-    grid-column: 1 / -1;
-    padding-left: var(--space-2xs);
     font-size: 0.68rem;
     color: var(--ink-muted);
     font-variant-numeric: tabular-nums;
@@ -590,10 +625,6 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
 
   /* Rows carrying a meta line need breathing room between them. */
   .bars { gap: var(--space-sm); }
-
-  @media (max-width: 40rem) {
-    .bar-row { grid-template-columns: minmax(0, 9rem) 1fr; }
-  }
 
   /* ---------- weights ---------- */
 
