@@ -1,5 +1,6 @@
 ---
 import { skillGroups, education } from '../data/resume';
+import TechTicker from './TechTicker.astro';
 
 // One shared scale across all groups, so bar lengths compare like for like.
 const maxYears = Math.max(...skillGroups.flatMap((g) => g.skills.map((s) => s.years)));
@@ -10,9 +11,12 @@ const maxYears = Math.max(...skillGroups.flatMap((g) => g.skills.map((s) => s.ye
     <p class="section__label">Toolkit</p>
     <h2 class="section__title">Skills, by years in the seat</h2>
     <p class="section__intro">
-      Bar length is hands-on years on one shared scale. Two entries are marked as recent rather
-      than deep — being straight about that matters more than a longer bar.
+      Hover any tool in the ticker for what I've done with it. Below, bar length is hands-on years
+      on one shared scale — two entries are marked as recent rather than deep, because being
+      straight about that matters more than a longer bar.
     </p>
+
+    <TechTicker />
 
     <div class="skills">
       {

@@ -1,0 +1,260 @@
+---
+import { tech } from '../data/tech';
+
+// The track holds two copies of the list and translates by exactly -50%, so the
+// second copy lands where the first began and the loop is seamless. The copy is
+// aria-hidden and inert — it exists for the eye only.
+const passes = [
+  { items: tech, clone: false },
+  { items: tech, clone: true },
+];
+
+const label = (item: (typeof tech)[number]) =>
+  item.note ?? (item.years ? `${item.years}+ yrs` : '');
+---
+
+<div class="ticker" data-ticker>
+  <div class="ticker__viewport">
+    <ul class="ticker__track" data-track>
+      {
+        passes.map(({ items, clone }) =>
+          items.map((item) => (
+            <li class="ticker__item" aria-hidden={clone ? 'true' : undefined}>
+              <button
+                type="button"
+                class="chip"
+                style={`--brand:${item.color}; --brand-dark:${item.colorDark ?? item.color}`}
+                data-name={item.name}
+                data-meta={label(item)}
+                data-detail={item.detail}
+                tabindex={clone ? -1 : undefined}
+                aria-hidden={clone ? 'true' : undefined}
+              >
+                <svg class="chip__icon" viewBox="0 0 24 24" aria-hidden="true" set:html={item.icon} />
+                <span class="chip__name">{item.name}</span>
+              </button>
+            </li>
+          )),
+        )
+      }
+    </ul>
+  </div>
+
+  <!-- Detail card, positioned against whichever chip is hovered or focused. -->
+  <div class="chip-card" data-card hidden>
+    <p class="chip-card__head">
+      <span data-card-name></span>
+      <span class="chip-card__meta" data-card-meta></span>
+    </p>
+    <p class="chip-card__detail" data-card-detail></p>
+  </div>
+</div>
+
+<script>
+  const ticker = document.querySelector<HTMLElement>('[data-ticker]');
+  const track = document.querySelector<HTMLElement>('[data-track]');
+  const card = document.querySelector<HTMLElement>('[data-card]');
+
+  if (ticker && track && card) {
+    const nameEl = card.querySelector<HTMLElement>('[data-card-name]');
+    const metaEl = card.querySelector<HTMLElement>('[data-card-meta]');
+    const detailEl = card.querySelector<HTMLElement>('[data-card-detail]');
+
+    const show = (chip: HTMLElement) => {
+      if (nameEl) nameEl.textContent = chip.dataset.name ?? '';
+      if (metaEl) metaEl.textContent = chip.dataset.meta ?? '';
+      if (detailEl) detailEl.textContent = chip.dataset.detail ?? '';
+
+      // Freeze the scroll first: the card is positioned from the chip's box, and
+      // a moving chip would leave the card behind.
+      track.style.animationPlayState = 'paused';
+      card.hidden = false;
+
+      const chipBox = chip.getBoundingClientRect();
+      const hostBox = ticker.getBoundingClientRect();
+      const cardBox = card.getBoundingClientRect();
+
+      // Centre on the chip, then clamp inside the ticker so it never overflows.
+      const raw = chipBox.left - hostBox.left + chipBox.width / 2 - cardBox.width / 2;
+      const left = Math.min(Math.max(0, raw), hostBox.width - cardBox.width);
+      card.style.transform = `translateX(${Math.round(left)}px)`;
+    };
+
+    const hide = () => {
+      card.hidden = true;
+      track.style.animationPlayState = '';
+    };
+
+    // Pointer and keyboard both drive the same path, so the ticker is fully
+    // usable without a mouse. The duplicated chips are aria-hidden for screen
+    // readers but still respond to the pointer — they are half of what's on
+    // screen at any moment, and carry the same data attributes.
+    for (const event of ['pointerover', 'focusin'] as const) {
+      ticker.addEventListener(event, (e) => {
+        const chip = (e.target as HTMLElement).closest<HTMLElement>('.chip');
+        if (chip) show(chip);
+      });
+    }
+
+    ticker.addEventListener('pointerleave', hide);
+    ticker.addEventListener('focusout', (e) => {
+      if (!ticker.contains(e.relatedTarget as Node)) hide();
+    });
+    ticker.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        hide();
+        (document.activeElement as HTMLElement)?.blur();
+      }
+    });
+  }
+</script>
+
+<style>
+  .ticker {
+    position: relative;
+    margin-bottom: var(--space-xl);
+    padding-block: var(--space-sm);
+    border-block: 1px solid var(--border);
+  }
+
+  .ticker__viewport {
+    overflow: hidden;
+    /* Fade the ends so items enter and leave rather than popping at a hard edge. */
+    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  }
+
+  .ticker__track {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    width: max-content;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    animation: scroll 46s linear infinite;
+  }
+
+  .ticker:hover .ticker__track,
+  .ticker:focus-within .ticker__track {
+    animation-play-state: paused;
+  }
+
+  @keyframes scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .ticker__item { flex: 0 0 auto; }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid transparent;
+    border-radius: 100px;
+    background: transparent;
+    font: inherit;
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  }
+
+  .chip__icon {
+    width: 1.35rem;
+    height: 1.35rem;
+    flex: 0 0 auto;
+    /* Desaturated at rest; the brand colour arrives on hover. */
+    color: var(--ink-muted);
+    opacity: 0.75;
+    transition: color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .chip__name {
+    font-weight: 520;
+    transition: color 0.2s ease;
+  }
+
+  .chip:hover,
+  .chip:focus-visible {
+    color: var(--ink);
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .chip:hover .chip__icon,
+  .chip:focus-visible .chip__icon {
+    color: var(--brand);
+    opacity: 1;
+    transform: scale(1.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .chip:hover .chip__icon,
+    :root:not([data-theme='light']) .chip:focus-visible .chip__icon {
+      color: var(--brand-dark);
+    }
+  }
+  :root[data-theme='dark'] .chip:hover .chip__icon,
+  :root[data-theme='dark'] .chip:focus-visible .chip__icon {
+    color: var(--brand-dark);
+  }
+
+  /* ---------- detail card ---------- */
+
+  .chip-card {
+    position: absolute;
+    top: calc(100% + var(--space-xs));
+    left: 0;
+    z-index: 30;
+    width: min(20rem, calc(100vw - 2 * var(--space-lg)));
+    padding: var(--space-sm) var(--space-md);
+    background: var(--surface-raised);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.13);
+    pointer-events: none;
+  }
+  .chip-card[hidden] { display: none; }
+
+  .chip-card__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    font-weight: 600;
+    margin-bottom: var(--space-2xs);
+  }
+
+  .chip-card__meta {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-muted);
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .chip-card__detail {
+    font-size: var(--step--1);
+    color: var(--ink-secondary);
+    line-height: 1.45;
+  }
+
+  /* A moving marquee is exactly what reduced-motion is for: fall back to a
+     static wrapped row that still hovers and still shows the detail card. */
+  @media (prefers-reduced-motion: reduce) {
+    .ticker__viewport { mask-image: none; }
+    .ticker__track {
+      animation: none;
+      flex-wrap: wrap;
+      width: auto;
+      justify-content: center;
+      gap: var(--space-2xs);
+    }
+    /* The duplicate set is purely for the scroll illusion — drop it here. */
+    .ticker__item[aria-hidden='true'] { display: none; }
+  }
+</style>
