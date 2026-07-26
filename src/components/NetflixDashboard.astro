@@ -6,6 +6,11 @@ const { titles, genres, weights, titleCount, genreCoverage, generated } = data;
 const fmtHours = (n: number) =>
   n >= 1_000_000_000 ? `${(n / 1_000_000_000).toFixed(1)}B` : `${Math.round(n / 1_000_000)}M`;
 
+// Every figure on screen is grouped — an unseparated 991500000 is unreadable.
+const fmtInt = (n: number) => Math.round(n).toLocaleString('en-US');
+const fmtDec = (n: number, digits = 1) =>
+  n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+
 // Titles are pre-sorted by score; the client re-sorts from this same list.
 const initial = titles.slice(0, 12);
 const maxScore = Math.max(...titles.map((t) => t.score));
@@ -60,11 +65,13 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
           {
             initial.map((t) => (
               <li class="bar-row">
-                <span class="bar-row__label" title={t.title}>{t.title}</span>
+                <span class="bar-row__head">
+                  <span class="bar-row__title" title={t.title}>{t.title}</span>
+                  <span class="bar-row__value">- {fmtInt(t.score)}</span>
+                </span>
                 <span class="bar-row__track">
                   <span class="bar-row__bar" style={`--pct:${(t.score / maxScore) * 100}%`} />
                 </span>
-                <span class="bar-row__value">{t.score.toFixed(0)}</span>
               </li>
             ))
           }
@@ -89,15 +96,19 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
           {
             genres.slice(0, 8).map((g) => (
               <li class="bar-row">
-                <span class="bar-row__label">{g.genre}</span>
+                <span class="bar-row__head">
+                  <span class="bar-row__title">{g.genre}</span>
+                  <span class="bar-row__value">- {fmtDec(g.avgScore)}</span>
+                </span>
                 <span class="bar-row__track">
                   <span
                     class="bar-row__bar bar-row__bar--alt"
                     style={`--pct:${(g.avgScore / maxGenre) * 100}%`}
                   />
                 </span>
-                <span class="bar-row__value">{g.avgScore.toFixed(1)}</span>
-                <span class="bar-row__meta">{g.titleCount} titles · {fmtHours(g.totalHours)} hrs</span>
+                <span class="bar-row__meta">
+                  {fmtInt(g.titleCount)} titles · {fmtHours(g.totalHours)} hrs
+                </span>
               </li>
             ))
           }
@@ -198,32 +209,33 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
   const tip = document.querySelector<HTMLElement>('[data-tip]');
 
   if (list && tip) {
+    const fmtInt = (n: number) => Math.round(n).toLocaleString('en-US');
+    const fmtDec = (n: number, digits = 1) =>
+      n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+
     const SORTS = {
       score: {
         key: 'score' as const,
         heading: 'Top Titles by Opportunity Score',
         note: 'Score blends hours viewed, sustained ranking, rating, and recency.',
-        format: (t: Title) => t.score.toFixed(0),
+        format: (t: Title) => fmtInt(t.score),
       },
       hoursViewed: {
         key: 'hoursViewed' as const,
         heading: 'Top Titles by Hours Viewed',
         note: 'Raw consumption — the single largest input to the score, shown on its own.',
-        format: (t: Title) => `${(t.hoursViewed / 1_000_000).toFixed(0)}M`,
+        format: (t: Title) => fmtInt(t.hoursViewed),
       },
       weeksInTop10: {
         key: 'weeksInTop10' as const,
         heading: 'Top Titles by Weeks in the Top 10',
         note: 'Staying power. Note how differently this ranks from raw hours — that gap is why the score exists.',
-        format: (t: Title) => `${t.weeksInTop10}w`,
+        format: (t: Title) => fmtInt(t.weeksInTop10),
       },
     };
 
     let sort: keyof typeof SORTS = 'score';
     let count = 12;
-
-    const fmtHours = (n: number) =>
-      n >= 1_000_000_000 ? `${(n / 1_000_000_000).toFixed(2)}B` : `${(n / 1_000_000).toFixed(0)}M`;
 
     const render = () => {
       const config = SORTS[sort];
@@ -242,22 +254,34 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
           li.className = 'bar-row';
           li.tabIndex = 0;
           // Header repeats the ranked value so the tooltip matches the bar the
-          // pointer is on, whichever sort is active.
+          // pointer is on, whichever sort is active. Every metric line is
+          // "Label - Value" and stays on one line; the CSS does not wrap them.
           li.dataset.tipHead = `${t.title} - ${config.format(t)}`;
           li.dataset.tip = [
-            `Opportunity Score ${t.score.toFixed(1)}`,
-            `${fmtHours(t.hoursViewed)} Hours Viewed`,
-            `${t.weeksInTop10} Weeks in Top 10`,
-            t.voteAverage ? `Rated ${t.voteAverage}/10` : null,
-            t.year ? `Released ${t.year}` : null,
+            `Opportunity Score - ${fmtDec(t.score)}`,
+            `Hours Viewed - ${fmtInt(t.hoursViewed)}`,
+            `Weeks in Top 10 - ${fmtInt(t.weeksInTop10)}`,
+            t.voteAverage ? `Rating - ${fmtDec(t.voteAverage)} / 10` : null,
+            t.runtime ? `Runtime - ${fmtInt(t.runtime)} min` : null,
+            // A year is an identifier, not a quantity — never group it as 2,025.
+            t.year ? `Released - ${t.year}` : null,
           ]
             .filter(Boolean)
             .join('\n');
 
-          const label = document.createElement('span');
-          label.className = 'bar-row__label';
-          label.textContent = t.title;
-          label.title = t.title;
+          const head = document.createElement('span');
+          head.className = 'bar-row__head';
+
+          const title = document.createElement('span');
+          title.className = 'bar-row__title';
+          title.textContent = t.title;
+          title.title = t.title;
+
+          const value = document.createElement('span');
+          value.className = 'bar-row__value';
+          value.textContent = `- ${config.format(t)}`;
+
+          head.append(title, value);
 
           const track = document.createElement('span');
           track.className = 'bar-row__track';
@@ -266,11 +290,7 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
           bar.style.setProperty('--pct', `${((t[config.key] as number) / max) * 100}%`);
           track.append(bar);
 
-          const value = document.createElement('span');
-          value.className = 'bar-row__value';
-          value.textContent = config.format(t);
-
-          li.append(label, track, value);
+          li.append(head, track);
           return li;
         }),
       );
@@ -477,7 +497,7 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
 
   .bar-row {
     display: grid;
-    grid-template-columns: minmax(0, 9.5rem) 1fr auto;
+    grid-template-columns: minmax(0, 15rem) 1fr;
     align-items: center;
     gap: var(--space-sm);
     padding: 3px var(--space-2xs);
@@ -488,7 +508,19 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
   .bar-row:hover,
   .bar-row:focus-visible { background: var(--accent-wash); }
 
-  .bar-row__label {
+  /* Title and value share one cell so they read as "Name - 899" rather than
+     sitting either side of the bar with nothing joining them. */
+  .bar-row__head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  /* The title yields first; the number must never be the thing that truncates. */
+  .bar-row__title {
+    flex: 0 1 auto;
+    min-width: 0;
     font-size: var(--step--1);
     color: var(--ink-secondary);
     white-space: nowrap;
@@ -523,26 +555,27 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
   }
 
   .bar-row__value {
+    flex: 0 0 auto;
     font-family: var(--font-mono);
     font-size: 0.75rem;
     font-variant-numeric: tabular-nums;
     color: var(--ink);
-    text-align: right;
-    min-width: 3.25rem;
+    white-space: nowrap;
   }
 
-  .bars--genre .bar-row { grid-template-columns: minmax(0, 7rem) 1fr auto; }
+  .bars--genre .bar-row { grid-template-columns: minmax(0, 11rem) 1fr; }
 
   .bar-row__meta {
-    grid-column: 2 / -1;
+    grid-column: 1 / -1;
+    padding-left: var(--space-2xs);
     font-size: 0.68rem;
     color: var(--ink-muted);
     font-variant-numeric: tabular-nums;
   }
 
-  @media (max-width: 30rem) {
-    .bar-row { grid-template-columns: minmax(0, 6.5rem) 1fr auto; }
-    .bar-row__value { min-width: 2.75rem; }
+  @media (max-width: 40rem) {
+    .bar-row { grid-template-columns: minmax(0, 11rem) 1fr; }
+    .bars--genre .bar-row { grid-template-columns: minmax(0, 9rem) 1fr; }
   }
 
   /* ---------- weights ---------- */
@@ -646,7 +679,9 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     top: 0;
     left: 0;
     z-index: 60;
-    max-width: 16rem;
+    /* Sized to its content so each metric keeps its own line; only a very
+       narrow viewport clamps it. */
+    max-width: min(92vw, 30rem);
     padding: var(--space-xs) var(--space-sm);
     background: var(--surface-raised);
     color: var(--ink);
@@ -667,11 +702,16 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     padding-bottom: var(--space-2xs);
     margin-bottom: var(--space-2xs);
     border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
+  /* `pre` rather than `pre-line`: newlines are honoured and lines never wrap,
+     so one metric always occupies exactly one row. */
   .tip__body {
     display: block;
-    white-space: pre-line;
+    white-space: pre;
     color: var(--ink-secondary);
   }
 </style>
