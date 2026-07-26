@@ -10,7 +10,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "check": "astro check && node scripts/check_chart_runtime.mjs",
+    "check": "astro check && node scripts/check_chart_runtime.mjs && node scripts/check_nav_runtime.mjs",
     "verify": "npm run build && npm run check"
   },
   "dependencies": {

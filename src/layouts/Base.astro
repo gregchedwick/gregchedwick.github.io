@@ -68,9 +68,42 @@ const nav = [
           {profile.name}<span class="site-header__dot">.</span>
         </a>
 
-        <nav class="site-nav" aria-label="Sections">
+        <!--
+          One nav for both layouts: an inline row on desktop, a panel under the
+          header on mobile. A second copy would duplicate the landmark for
+          screen readers.
+        -->
+        <nav class="site-nav" id="site-menu" data-nav aria-label="Sections">
           {nav.map((item) => <a href={item.href}>{item.label}</a>)}
         </nav>
+
+        <button
+          type="button"
+          class="nav-toggle"
+          data-nav-toggle
+          aria-expanded="false"
+          aria-controls="site-menu"
+          aria-label="Open navigation menu"
+        >
+          <svg class="nav-toggle__open" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path
+              d="M4 7h16M4 12h16M4 17h16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.9"
+              stroke-linecap="round"
+            />
+          </svg>
+          <svg class="nav-toggle__close" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path
+              d="M6 6l12 12M18 6L6 18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.9"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
 
         <button
           type="button"
@@ -135,6 +168,46 @@ const nav = [
       });
 
       syncLabel();
+
+      // --- mobile navigation ---
+
+      const navToggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+      const navMenu = document.querySelector<HTMLElement>('[data-nav]');
+      const wide = window.matchMedia('(min-width: 48rem)');
+
+      const isNavOpen = () => navToggle?.getAttribute('aria-expanded') === 'true';
+
+      const setNav = (open: boolean) => {
+        navToggle?.setAttribute('aria-expanded', String(open));
+        navToggle?.setAttribute('aria-label', `${open ? 'Close' : 'Open'} navigation menu`);
+        if (open) navMenu?.setAttribute('data-open', '');
+        else navMenu?.removeAttribute('data-open');
+      };
+
+      navToggle?.addEventListener('click', () => setNav(!isNavOpen()));
+
+      // Jumping to a section should dismiss the panel covering it.
+      navMenu?.addEventListener('click', (event) => {
+        if ((event.target as HTMLElement).closest('a')) setNav(false);
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && isNavOpen()) {
+          setNav(false);
+          navToggle?.focus();
+        }
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!isNavOpen()) return;
+        const target = event.target as Node;
+        if (!navMenu?.contains(target) && !navToggle?.contains(target)) setNav(false);
+      });
+
+      // Growing past the breakpoint must not leave the panel state stuck on.
+      wide.addEventListener('change', (event) => {
+        if (event.matches) setNav(false);
+      });
     </script>
 
     <style>
@@ -177,10 +250,6 @@ const nav = [
       }
       .site-header__dot { color: var(--accent); }
 
-      .site-nav {
-        display: none;
-        gap: var(--space-lg);
-      }
       .site-nav a {
         color: var(--ink-secondary);
         text-decoration: none;
@@ -189,9 +258,64 @@ const nav = [
       }
       .site-nav a:hover { color: var(--ink); }
 
+      /* Desktop: an inline row in the header bar. */
       @media (min-width: 48rem) {
-        .site-nav { display: flex; }
+        .site-nav {
+          display: flex;
+          gap: var(--space-lg);
+        }
+        .nav-toggle { display: none; }
       }
+
+      /*
+        Mobile: a panel dropped under the header. Previously the nav was simply
+        display:none here with nothing to replace it, so every section link was
+        unreachable on a phone.
+      */
+      @media (max-width: 47.99rem) {
+        .site-nav {
+          display: none;
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          flex-direction: column;
+          gap: 0;
+          padding: var(--space-xs) 0 var(--space-sm);
+          background: var(--surface-raised);
+          border-bottom: 1px solid var(--border);
+          box-shadow: 0 10px 24px rgb(0 0 0 / 0.10);
+        }
+        .site-nav[data-open] { display: flex; }
+
+        .site-nav a {
+          padding: var(--space-sm) var(--space-lg);
+          font-size: var(--step-0);
+        }
+        .site-nav a:hover,
+        .site-nav a:focus-visible { background: var(--accent-wash); }
+      }
+
+      .nav-toggle {
+        display: grid;
+        place-items: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--ink-secondary);
+        cursor: pointer;
+        transition: color 0.15s ease, border-color 0.15s ease;
+      }
+      .nav-toggle:hover {
+        color: var(--ink);
+        border-color: var(--border-strong);
+      }
+      .nav-toggle__close { display: none; }
+      .nav-toggle[aria-expanded='true'] .nav-toggle__open { display: none; }
+      .nav-toggle[aria-expanded='true'] .nav-toggle__close { display: block; }
 
       .theme-toggle {
         display: grid;
