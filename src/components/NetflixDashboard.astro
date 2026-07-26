@@ -47,149 +47,154 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     </p>
 
     <!--
-      Two columns: the tall titles chart on the left, and the filters stacked
-      above genres and the weighting model on the right. DOM order puts the
-      filters first so they are reached before the charts they drive.
+      Two columns, each packing independently: the ranked list and the model
+      behind it on the left, the filters and genres on the right.
     -->
     <div class="dashboard">
-      <div class="controls">
-        <fieldset class="control">
-          <legend class="control__label">Rank by</legend>
-          <div class="segmented" role="group">
-            <button type="button" data-sort="score" aria-pressed="true">Opportunity score</button>
-            <button type="button" data-sort="hoursViewed" aria-pressed="false">Hours viewed</button>
-            <button type="button" data-sort="weeksInTop10" aria-pressed="false">Weeks in top 10</button>
+      <!-- Left column: the ranked list and the model behind it. -->
+      <div class="dashboard__col">
+        <!-- ---------- titles ---------- -->
+        <figure class="panel panel--titles">
+          <figcaption class="panel__head">
+            <h3 class="panel__title" data-title-heading>Top Titles by Opportunity Score</h3>
+            <p class="panel__note" data-title-note>
+              Score blends hours viewed, sustained ranking, rating, and recency.
+            </p>
+          </figcaption>
+
+          <ol class="bars" data-titles>
+            {
+              initial.map((t) => (
+                <li class="bar-row">
+                  <span class="bar-row__head">
+                    <span class="bar-row__title" title={t.title}>{t.title}</span>
+                    <span class="bar-row__value">- {fmtInt(t.score)}</span>
+                  </span>
+                  <span class="bar-row__track">
+                    <span
+                      class="bar-row__bar"
+                      data-clipped={t.score > titleAxis ? 'true' : 'false'}
+                      style={`--pct:${Math.min(100, (t.score / titleAxis) * 100)}%`}
+                    />
+                  </span>
+                  <span class="bar-row__meta">
+                    {t.year} · {fmtInt(t.weeksInTop10)} wks · {fmtHours(t.hoursViewed)} hrs
+                  </span>
+                </li>
+              ))
+            }
+          </ol>
+
+          <p class="panel__foot">
+            Hover or focus a bar for the underlying numbers. A bar that fades at its end runs past
+            the axis — the axis stops above the runner-up so the rest stay comparable.
+          </p>
+        </figure>
+
+        <!-- ---------- scoring model ---------- -->
+        <figure class="panel panel--weights">
+          <figcaption class="panel__head">
+            <h3 class="panel__title">How the Score Is Weighted</h3>
+            <p class="panel__note">
+              Hours viewed dominates deliberately — it is the closest available proxy for realised ad
+              impressions. The rest adjust for staying power and quality.
+            </p>
+          </figcaption>
+
+          <!-- Proportion bar. Every segment is direct-labelled below: two of these
+               hues sit under 3:1 on the light surface, so labels are required relief,
+               not decoration. -->
+          <div class="weights" role="img" aria-label={
+            weights.map((w) => `${w.component} ${w.weight} percent`).join(', ')
+          }>
+            {
+              weights.map((w, i) => (
+                <span
+                  class="weights__segment"
+                  style={`--pct:${w.weight}%; --fill:var(${seriesVar[i % seriesVar.length]})`}
+                />
+              ))
+            }
           </div>
-        </fieldset>
 
-        <label class="control control--count">
-          <span class="control__label">Show top</span>
-          <select data-count>
-            <option value="8">8</option>
-            <option value="12" selected>12</option>
-            <option value="20">20</option>
-            <option value="30">30</option>
-          </select>
-        </label>
-
-        <p class="controls__note">Both charts respond to these.</p>
+          <ul class="weights__key">
+            {
+              weights.map((w, i) => (
+                <li class="weights__item">
+                  <span
+                    class="weights__swatch"
+                    style={`--fill:var(${seriesVar[i % seriesVar.length]})`}
+                    aria-hidden="true"
+                  />
+                  <span class="weights__name">{w.component}</span>
+                  <span class="weights__pct">{w.weight}%</span>
+                  <span class="weights__why">{w.rationale}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </figure>
       </div>
 
-      <!-- ---------- titles ---------- -->
-      <figure class="panel panel--titles">
-        <figcaption class="panel__head">
-          <h3 class="panel__title" data-title-heading>Top Titles by Opportunity Score</h3>
-          <p class="panel__note" data-title-note>
-            Score blends hours viewed, sustained ranking, rating, and recency.
-          </p>
-        </figcaption>
+      <!-- Right column: the filters that drive both charts, then genres. -->
+      <div class="dashboard__col">
+        <div class="controls">
+          <fieldset class="control">
+            <legend class="control__label">Rank by</legend>
+            <div class="segmented" role="group">
+              <button type="button" data-sort="score" aria-pressed="true">Opportunity score</button>
+              <button type="button" data-sort="hoursViewed" aria-pressed="false">Hours viewed</button>
+              <button type="button" data-sort="weeksInTop10" aria-pressed="false">Weeks in top 10</button>
+            </div>
+          </fieldset>
 
-        <ol class="bars" data-titles>
-          {
-            initial.map((t) => (
-              <li class="bar-row">
-                <span class="bar-row__head">
-                  <span class="bar-row__title" title={t.title}>{t.title}</span>
-                  <span class="bar-row__value">- {fmtInt(t.score)}</span>
-                </span>
-                <span class="bar-row__track">
-                  <span
-                    class="bar-row__bar"
-                    data-clipped={t.score > titleAxis ? 'true' : 'false'}
-                    style={`--pct:${Math.min(100, (t.score / titleAxis) * 100)}%`}
-                  />
-                </span>
-                <span class="bar-row__meta">
-                  {t.year} · {fmtInt(t.weeksInTop10)} wks · {fmtHours(t.hoursViewed)} hrs
-                </span>
-              </li>
-            ))
-          }
-        </ol>
+          <label class="control control--count">
+            <span class="control__label">Show top</span>
+            <select data-count>
+              <option value="8">8</option>
+              <option value="12" selected>12</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+            </select>
+          </label>
 
-        <p class="panel__foot">
-          Hover or focus a bar for the underlying numbers. A bar that fades at its end runs past
-          the axis — the axis stops above the runner-up so the rest stay comparable.
-        </p>
-      </figure>
-
-      <!-- ---------- genres ---------- -->
-      <figure class="panel panel--genres">
-        <figcaption class="panel__head">
-          <h3 class="panel__title" data-genre-heading>Genres by Average Score</h3>
-          <p class="panel__note" data-genre-note>
-            Averaged across every ranked title carrying that genre. Title counts vary — War is a
-            small, high-performing set.
-          </p>
-        </figcaption>
-
-        <ol class="bars bars--genre" data-genres>
-          {
-            topGenres.map((g) => (
-              <li class="bar-row">
-                <span class="bar-row__head">
-                  <span class="bar-row__title">{g.genre}</span>
-                  <span class="bar-row__value">- {fmtDec(g.avgScore)}</span>
-                </span>
-                <span class="bar-row__track">
-                  <span
-                    class="bar-row__bar"
-                    data-clipped={g.avgScore > genreAxis ? 'true' : 'false'}
-                    style={`--pct:${Math.min(100, (g.avgScore / genreAxis) * 100)}%`}
-                  />
-                </span>
-                <span class="bar-row__meta">
-                  {fmtInt(g.titleCount)} titles · {fmtHours(g.totalHours)} hrs
-                </span>
-              </li>
-            ))
-          }
-        </ol>
-      </figure>
-
-      <!-- ---------- scoring model ---------- -->
-      <figure class="panel panel--weights">
-        <figcaption class="panel__head">
-          <h3 class="panel__title">How the Score Is Weighted</h3>
-          <p class="panel__note">
-            Hours viewed dominates deliberately — it is the closest available proxy for realised ad
-            impressions. The rest adjust for staying power and quality.
-          </p>
-        </figcaption>
-
-        <!-- Proportion bar. Every segment is direct-labelled below: two of these
-             hues sit under 3:1 on the light surface, so labels are required relief,
-             not decoration. -->
-        <div class="weights" role="img" aria-label={
-          weights.map((w) => `${w.component} ${w.weight} percent`).join(', ')
-        }>
-          {
-            weights.map((w, i) => (
-              <span
-                class="weights__segment"
-                style={`--pct:${w.weight}%; --fill:var(${seriesVar[i % seriesVar.length]})`}
-              />
-            ))
-          }
+          <p class="controls__note">Both charts respond to these.</p>
         </div>
 
-        <ul class="weights__key">
-          {
-            weights.map((w, i) => (
-              <li class="weights__item">
-                <span
-                  class="weights__swatch"
-                  style={`--fill:var(${seriesVar[i % seriesVar.length]})`}
-                  aria-hidden="true"
-                />
-                <span class="weights__name">{w.component}</span>
-                <span class="weights__pct">{w.weight}%</span>
-                <span class="weights__why">{w.rationale}</span>
-              </li>
-            ))
-          }
-        </ul>
-      </figure>
+        <!-- ---------- genres ---------- -->
+        <figure class="panel panel--genres">
+          <figcaption class="panel__head">
+            <h3 class="panel__title" data-genre-heading>Genres by Average Score</h3>
+            <p class="panel__note" data-genre-note>
+              Averaged across every ranked title carrying that genre. Title counts vary — War is a
+              small, high-performing set.
+            </p>
+          </figcaption>
+
+          <ol class="bars bars--genre" data-genres>
+            {
+              topGenres.map((g) => (
+                <li class="bar-row">
+                  <span class="bar-row__head">
+                    <span class="bar-row__title">{g.genre}</span>
+                    <span class="bar-row__value">- {fmtDec(g.avgScore)}</span>
+                  </span>
+                  <span class="bar-row__track">
+                    <span
+                      class="bar-row__bar"
+                      data-clipped={g.avgScore > genreAxis ? 'true' : 'false'}
+                      style={`--pct:${Math.min(100, (g.avgScore / genreAxis) * 100)}%`}
+                    />
+                  </span>
+                  <span class="bar-row__meta">
+                    {fmtInt(g.titleCount)} titles · {fmtHours(g.totalHours)} hrs
+                  </span>
+                </li>
+              ))
+            }
+          </ol>
+        </figure>
+      </div>
     </div>
 
     <details class="caveat">
@@ -611,6 +616,10 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
      room, and body copy elsewhere does not. */
   .netflix > .container { max-width: 1360px; }
 
+  /* The intro spans the full dashboard width rather than the usual reading
+     measure, so it sits over both columns instead of stopping mid-page. */
+  .netflix .section__intro { max-width: none; }
+
   /* Single column while narrow; DOM order (filters, titles, genres, weights)
      is already the right reading order there. */
   .dashboard {
@@ -619,16 +628,32 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     align-items: start;
   }
 
+  /* Each column packs independently rather than sharing grid rows. Sharing them
+     would stretch every row to its tallest cell — the filters are a fraction of
+     the height of the titles chart beside them, and the gap would be the dead
+     space this layout exists to remove. */
+  .dashboard__col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    min-width: 0;
+  }
+
   @media (min-width: 60rem) {
     .dashboard {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }
-    /* Titles runs the full height of the left column; the right column stacks
-       filters, genres, and the weighting model. */
-    .panel--titles  { grid-column: 1; grid-row: 1 / span 3; }
-    .controls       { grid-column: 2; grid-row: 1; }
-    .panel--genres  { grid-column: 2; grid-row: 2; }
-    .panel--weights { grid-column: 2; grid-row: 3; }
+  }
+
+  /* Below that the wrappers dissolve, so the four panels become direct grid
+     items and can be ordered for reading: filters first, then the chart they
+     drive, then genres, then the model. */
+  @media (max-width: 59.99rem) {
+    .dashboard__col { display: contents; }
+    .controls       { order: 1; }
+    .panel--titles  { order: 2; }
+    .panel--genres  { order: 3; }
+    .panel--weights { order: 4; }
   }
 
   .panel {
