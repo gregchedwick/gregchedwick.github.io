@@ -225,8 +225,14 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     </p>
   </div>
 
-  <!-- Single tooltip element, repositioned on hover/focus. -->
-  <div class="tip" data-tip hidden role="status" aria-live="polite"></div>
+  <!--
+    Single tooltip, repositioned on hover/focus. Both children are rendered here
+    rather than created in JS, so Astro's scoped styles actually reach them.
+  -->
+  <div class="tip" data-tip hidden role="status" aria-live="polite">
+    <strong class="tip__head" data-tip-head></strong>
+    <span class="tip__body" data-tip-body></span>
+  </div>
 </section>
 
 <script>
@@ -273,7 +279,23 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     let sort: keyof typeof SORTS = 'score';
     let count = 12;
 
+    /*
+     * Rows are cloned from a server-rendered one, never built with
+     * document.createElement.
+     *
+     * Astro scopes component CSS by appending an attribute to every selector
+     * (.bar-row__track[data-astro-cid-…]). Elements created in JS do not carry
+     * that attribute, so none of the panel's CSS applied to them: the track had
+     * no height and the bar no width, which is why this chart showed labels but
+     * no bars while the server-rendered genre panel looked correct. Cloning a
+     * real row copies the attribute along with the structure.
+     */
+    const prototype = list.querySelector<HTMLLIElement>('.bar-row')?.cloneNode(true) as
+      | HTMLLIElement
+      | undefined;
+
     const render = () => {
+      if (!prototype) return;
       const config = SORTS[sort];
       const rows = [...titleData.titles]
         .sort((a, b) => (b[config.key] as number) - (a[config.key] as number))
@@ -291,8 +313,7 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
 
       list.replaceChildren(
         ...rows.map((t) => {
-          const li = document.createElement('li');
-          li.className = 'bar-row';
+          const li = prototype.cloneNode(true) as HTMLLIElement;
           li.tabIndex = 0;
           // Header repeats the ranked value so the tooltip matches the bar the
           // pointer is on, whichever sort is active. Every metric line is
@@ -310,40 +331,33 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
             .filter(Boolean)
             .join('\n');
 
-          const head = document.createElement('span');
-          head.className = 'bar-row__head';
+          const title = li.querySelector<HTMLElement>('.bar-row__title');
+          if (title) {
+            title.textContent = t.title;
+            title.title = t.title;
+          }
 
-          const title = document.createElement('span');
-          title.className = 'bar-row__title';
-          title.textContent = t.title;
-          title.title = t.title;
+          const value = li.querySelector<HTMLElement>('.bar-row__value');
+          if (value) value.textContent = `- ${config.format(t)}`;
 
-          const value = document.createElement('span');
-          value.className = 'bar-row__value';
-          value.textContent = `- ${config.format(t)}`;
-
-          head.append(title, value);
-
-          const track = document.createElement('span');
-          track.className = 'bar-row__track';
           const magnitude = t[config.key] as number;
-          const bar = document.createElement('span');
-          bar.className = 'bar-row__bar';
-          bar.dataset.clipped = magnitude > axis ? 'true' : 'false';
-          bar.style.setProperty('--pct', `${Math.min(100, (magnitude / axis) * 100)}%`);
-          track.append(bar);
+          const bar = li.querySelector<HTMLElement>('.bar-row__bar');
+          if (bar) {
+            bar.dataset.clipped = magnitude > axis ? 'true' : 'false';
+            bar.style.setProperty('--pct', `${Math.min(100, (magnitude / axis) * 100)}%`);
+          }
 
           // Mirrors the genre panel's sub-line, and carries the two measures
           // that are not currently driving the ranking.
-          const meta = document.createElement('span');
-          meta.className = 'bar-row__meta';
-          meta.textContent = [
-            t.year,
-            `${fmtInt(t.weeksInTop10)} wks`,
-            `${fmtHours(t.hoursViewed)} hrs`,
-          ].join(' · ');
+          const meta = li.querySelector<HTMLElement>('.bar-row__meta');
+          if (meta) {
+            meta.textContent = [
+              t.year,
+              `${fmtInt(t.weeksInTop10)} wks`,
+              `${fmtHours(t.hoursViewed)} hrs`,
+            ].join(' · ');
+          }
 
-          li.append(head, track, meta);
           return li;
         }),
       );
@@ -351,19 +365,15 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
 
     // --- tooltip ---
 
+    const tipHead = tip.querySelector<HTMLElement>('[data-tip-head]');
+    const tipBody = tip.querySelector<HTMLElement>('[data-tip-body]');
+
     const showTip = (row: HTMLElement) => {
       const text = row.dataset.tip;
       if (!text) return;
 
-      const head = document.createElement('strong');
-      head.className = 'tip__head';
-      head.textContent = row.dataset.tipHead ?? '';
-
-      const body = document.createElement('span');
-      body.className = 'tip__body';
-      body.textContent = text;
-
-      tip.replaceChildren(head, body);
+      if (tipHead) tipHead.textContent = row.dataset.tipHead ?? '';
+      if (tipBody) tipBody.textContent = text;
       tip.hidden = false;
 
       const rect = row.getBoundingClientRect();

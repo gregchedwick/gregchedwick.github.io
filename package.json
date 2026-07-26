@@ -9,7 +9,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "check": "astro check && node scripts/check_chart_runtime.mjs",
+    "verify": "npm run build && npm run check"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
@@ -18,6 +20,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "jsdom": "^29.1.1",
     "typescript": "^6.0.3"
   }
 }
