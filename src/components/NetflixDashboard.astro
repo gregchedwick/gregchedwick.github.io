@@ -53,7 +53,7 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
 
     <div class="panels">
       <!-- ---------- titles ---------- -->
-      <figure class="panel panel--wide">
+      <figure class="panel">
         <figcaption class="panel__head">
           <h3 class="panel__title" data-title-heading>Top Titles by Opportunity Score</h3>
           <p class="panel__note" data-title-note>
@@ -71,6 +71,9 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
                 </span>
                 <span class="bar-row__track">
                   <span class="bar-row__bar" style={`--pct:${(t.score / maxScore) * 100}%`} />
+                </span>
+                <span class="bar-row__meta">
+                  {t.year} · {fmtInt(t.weeksInTop10)} wks · {fmtHours(t.hoursViewed)} hrs
                 </span>
               </li>
             ))
@@ -212,6 +215,9 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     const fmtInt = (n: number) => Math.round(n).toLocaleString('en-US');
     const fmtDec = (n: number, digits = 1) =>
       n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    // Compact form, for the sub-line only — the tooltip keeps the full figure.
+    const fmtHours = (n: number) =>
+      n >= 1_000_000_000 ? `${(n / 1_000_000_000).toFixed(1)}B` : `${Math.round(n / 1_000_000)}M`;
 
     const SORTS = {
       score: {
@@ -290,7 +296,17 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
           bar.style.setProperty('--pct', `${((t[config.key] as number) / max) * 100}%`);
           track.append(bar);
 
-          li.append(head, track);
+          // Mirrors the genre panel's sub-line, and carries the two measures
+          // that are not currently driving the ranking.
+          const meta = document.createElement('span');
+          meta.className = 'bar-row__meta';
+          meta.textContent = [
+            t.year,
+            `${fmtInt(t.weeksInTop10)} wks`,
+            `${fmtHours(t.hoursViewed)} hrs`,
+          ].join(' · ');
+
+          li.append(head, track, meta);
           return li;
         }),
       );
@@ -443,9 +459,12 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
 
   /* ---------- panels ---------- */
 
+  /* Three equal columns on a wide screen, so titles / genres / weights sit in
+     one row. The titles panel used to span two of them, which pushed the
+     weights panel onto a second row and left most of that row empty. */
   .panels {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
     gap: var(--space-md);
     align-items: start;
   }
@@ -457,10 +476,6 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     border: 1px solid var(--border);
     border-radius: var(--radius);
     min-width: 0;
-  }
-
-  @media (min-width: 62rem) {
-    .panel--wide { grid-column: span 2; }
   }
 
   .panel__head { margin-bottom: var(--space-md); }
@@ -495,9 +510,11 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     counter-reset: rank;
   }
 
+  /* One geometry for both charts. In three narrow columns the label has to give
+     up room or the bar has none left to encode with. */
   .bar-row {
     display: grid;
-    grid-template-columns: minmax(0, 15rem) 1fr;
+    grid-template-columns: minmax(0, 10.5rem) 1fr;
     align-items: center;
     gap: var(--space-sm);
     padding: 3px var(--space-2xs);
@@ -563,8 +580,6 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     white-space: nowrap;
   }
 
-  .bars--genre .bar-row { grid-template-columns: minmax(0, 11rem) 1fr; }
-
   .bar-row__meta {
     grid-column: 1 / -1;
     padding-left: var(--space-2xs);
@@ -573,9 +588,11 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     font-variant-numeric: tabular-nums;
   }
 
+  /* Rows carrying a meta line need breathing room between them. */
+  .bars { gap: var(--space-sm); }
+
   @media (max-width: 40rem) {
-    .bar-row { grid-template-columns: minmax(0, 11rem) 1fr; }
-    .bars--genre .bar-row { grid-template-columns: minmax(0, 9rem) 1fr; }
+    .bar-row { grid-template-columns: minmax(0, 9rem) 1fr; }
   }
 
   /* ---------- weights ---------- */
