@@ -1,0 +1,141 @@
+---
+import { metrics } from '../data/resume';
+---
+
+<section class="section" id="impact">
+  <div class="container">
+    <p class="section__label">By the numbers</p>
+    <h2 class="section__title">Impact, quantified</h2>
+    <p class="section__intro">
+      Every figure below traces to a specific project in the career history — no round numbers
+      without a story behind them.
+    </p>
+
+    <ul class="tiles" data-metrics>
+      {
+        metrics.map((metric) => (
+          <li class="tile">
+            <p
+              class="tile__value"
+              data-value={metric.value}
+              data-decimals={metric.decimals ?? 0}
+              data-prefix={metric.prefix ?? ''}
+              data-suffix={metric.suffix ?? ''}
+            >
+              {/* Rendered server-side so the real figure is present without JS. */}
+              {metric.prefix}
+              {metric.value.toLocaleString('en-US', {
+                minimumFractionDigits: metric.decimals ?? 0,
+                maximumFractionDigits: metric.decimals ?? 0,
+              })}
+              {metric.suffix}
+            </p>
+            <p class="tile__label">{metric.label}</p>
+            <p class="tile__detail">{metric.detail}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<script>
+  const DURATION = 1100;
+
+  // easeOutExpo — fast start, long settle. Reads as a counter landing on a value.
+  const ease = (t: number) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
+
+  const format = (n: number, decimals: number) =>
+    n.toLocaleString('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+
+  const animate = (el: HTMLElement) => {
+    const target = Number(el.dataset.value ?? 0);
+    const decimals = Number(el.dataset.decimals ?? 0);
+    const prefix = el.dataset.prefix ?? '';
+    const suffix = el.dataset.suffix ?? '';
+    const start = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / DURATION, 1);
+      el.textContent = prefix + format(target * ease(progress), decimals) + suffix;
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+
+    requestAnimationFrame(tick);
+  };
+
+  const tiles = document.querySelectorAll<HTMLElement>('[data-metrics] .tile__value');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // With reduced motion (or no IntersectionObserver) the server-rendered value
+  // is already correct — leave it alone.
+  if (!reduceMotion && 'IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          animate(entry.target as HTMLElement);
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.4 },
+    );
+
+    for (const tile of tiles) {
+      tile.textContent = (tile.dataset.prefix ?? '') + '0' + (tile.dataset.suffix ?? '');
+      observer.observe(tile);
+    }
+  }
+</script>
+
+<style>
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: var(--space-md);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .tile {
+    position: relative;
+    padding: var(--space-lg);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  /* Accent rule anchored to the top edge — a quiet nod to a bar's data-end. */
+  .tile::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent 65%);
+  }
+
+  .tile__value {
+    font-size: var(--step-3);
+    font-weight: 680;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin-bottom: var(--space-xs);
+  }
+
+  .tile__label {
+    font-weight: 560;
+    margin-bottom: var(--space-2xs);
+  }
+
+  .tile__detail {
+    font-size: var(--step--1);
+    color: var(--ink-secondary);
+    line-height: 1.5;
+  }
+</style>

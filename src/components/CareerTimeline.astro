@@ -1,0 +1,360 @@
+---
+import { tenures } from '../data/resume';
+
+// The span chart is drawn in percentages against one shared scale, so the
+// bars stay proportional at any width without JS measuring anything.
+const firstYear = Math.min(...tenures.map((t) => t.startYear));
+const lastYear = Math.max(...tenures.map((t) => t.endYear));
+const span = lastYear - firstYear;
+
+const position = (start: number, end: number) => ({
+  left: ((start - firstYear) / span) * 100,
+  width: ((end - start) / span) * 100,
+});
+
+// A tick every five years, plus the final year so the axis closes on "now".
+const ticks: number[] = [];
+for (let year = firstYear; year <= lastYear; year += 5) ticks.push(year);
+if (ticks.at(-1) !== lastYear) ticks.push(lastYear);
+
+const totalYears = lastYear - firstYear;
+---
+
+<section class="section" id="experience">
+  <div class="container">
+    <p class="section__label">Career</p>
+    <h2 class="section__title">{totalYears} years, three employers</h2>
+    <p class="section__intro">
+      Each bar spans one employer. Select a role to read what it involved — or read them all
+      below, no clicking required.
+    </p>
+
+    <!-- Span chart. Decorative: every value it encodes is repeated as text below. -->
+    <figure class="span-chart" aria-hidden="true">
+      <div class="span-chart__rows">
+        {
+          tenures.map((tenure, i) => {
+            const { left, width } = position(tenure.startYear, tenure.endYear);
+            return (
+              <div class="span-chart__row">
+                <span class="span-chart__name">{tenure.company}</span>
+                <div class="span-chart__track">
+                  <div
+                    class="span-chart__bar"
+                    data-current={tenure.current ? 'true' : 'false'}
+                    style={`left:${left}%; width:${width}%; --i:${i}`}
+                  >
+                    <span class="span-chart__years">
+                      {tenure.startYear}–{tenure.current ? 'now' : tenure.endYear}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        }
+      </div>
+
+      <div class="span-chart__axis">
+        {
+          ticks.map((year) => (
+            <span
+              class="span-chart__tick"
+              style={`left:${((year - firstYear) / span) * 100}%`}
+            >
+              {year}
+            </span>
+          ))
+        }
+      </div>
+    </figure>
+
+    <ol class="timeline">
+      {
+        tenures.map((tenure) => (
+          <li class="timeline__item">
+            <div class="timeline__marker" aria-hidden="true">
+              <span class="timeline__dot" data-current={tenure.current ? 'true' : 'false'} />
+            </div>
+
+            <div class="timeline__body">
+              <header class="timeline__header">
+                <h3 class="timeline__company">{tenure.company}</h3>
+                <p class="timeline__meta">
+                  <span>{tenure.start} – {tenure.end}</span>
+                  <span class="timeline__sep" aria-hidden="true">·</span>
+                  <span>{tenure.location}</span>
+                </p>
+              </header>
+
+              <ul class="roles">
+                {tenure.roles.map((role, index) => (
+                  <li class="role">
+                    <details open={index === 0}>
+                      <summary class="role__summary">
+                        <span class="role__chevron" aria-hidden="true">
+                          <svg viewBox="0 0 16 16" width="14" height="14">
+                            <path
+                              d="M6 4l4 4-4 4"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                          </svg>
+                        </span>
+                        <span>
+                          <span class="role__title">{role.title}</span>
+                          {role.team && <span class="role__team">{role.team}</span>}
+                        </span>
+                      </summary>
+                      <ul class="role__points">
+                        {role.achievements.map((point) => (
+                          <li>{point}</li>
+                        ))}
+                      </ul>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  /* ---------- span chart ---------- */
+
+  .span-chart {
+    margin: 0 0 var(--space-2xl);
+    padding: var(--space-lg);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .span-chart__rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .span-chart__row {
+    display: grid;
+    grid-template-columns: minmax(0, 7.5rem) 1fr;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  .span-chart__name {
+    font-size: var(--step--1);
+    color: var(--ink-secondary);
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .span-chart__track {
+    position: relative;
+    height: 1.75rem;
+    background: var(--gridline);
+    border-radius: var(--radius-sm);
+  }
+
+  .span-chart__bar {
+    position: absolute;
+    inset-block: 0;
+    display: flex;
+    align-items: center;
+    padding-inline: var(--space-xs);
+    /* 4px rounded data-ends, per the chart mark spec. */
+    border-radius: var(--radius-sm);
+    background: var(--seq-350);
+    /* 2px surface gap keeps adjacent fills from fusing. */
+    box-shadow: 0 0 0 2px var(--surface);
+    transform-origin: left center;
+    animation: grow 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: calc(var(--i) * 90ms);
+  }
+
+  .span-chart__bar[data-current='true'] { background: var(--accent); }
+
+  @keyframes grow {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  .span-chart__years {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .span-chart__axis {
+    position: relative;
+    height: 1.25rem;
+    margin-top: var(--space-xs);
+    margin-left: calc(7.5rem + var(--space-sm));
+    border-top: 1px solid var(--baseline);
+  }
+
+  .span-chart__tick {
+    position: absolute;
+    top: var(--space-2xs);
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-muted);
+  }
+  .span-chart__tick:first-child { transform: none; }
+  .span-chart__tick:last-child  { transform: translateX(-100%); }
+
+  @media (max-width: 34rem) {
+    .span-chart__row { grid-template-columns: minmax(0, 5rem) 1fr; }
+    .span-chart__axis { margin-left: calc(5rem + var(--space-sm)); }
+    .span-chart__years { font-size: 0.65rem; }
+  }
+
+  /* ---------- timeline ---------- */
+
+  .timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+  }
+
+  .timeline__item {
+    display: grid;
+    grid-template-columns: 1.25rem 1fr;
+    gap: var(--space-md);
+  }
+
+  .timeline__marker {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* The rail runs behind the dots, stopping short of the last one. */
+  .timeline__marker::before {
+    content: '';
+    position: absolute;
+    top: 1.1rem;
+    bottom: calc(-1 * var(--space-xl) - 0.5rem);
+    width: 1px;
+    background: var(--border-strong);
+  }
+  .timeline__item:last-child .timeline__marker::before { display: none; }
+
+  .timeline__dot {
+    position: relative;
+    width: 0.6rem;
+    height: 0.6rem;
+    margin-top: 0.55rem;
+    border-radius: 50%;
+    background: var(--baseline);
+    outline: 3px solid var(--page);
+  }
+  .timeline__dot[data-current='true'] { background: var(--accent); }
+
+  .timeline__header { margin-bottom: var(--space-sm); }
+
+  .timeline__company {
+    font-size: var(--step-1);
+    font-weight: 620;
+  }
+
+  .timeline__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs) var(--space-xs);
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .timeline__sep { color: var(--border-strong); }
+
+  .roles {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .role + .role { border-top: 1px solid var(--border); }
+
+  .role__summary {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-xs);
+    padding-block: var(--space-sm);
+    cursor: pointer;
+    list-style: none;
+    font-weight: 560;
+  }
+  .role__summary::-webkit-details-marker { display: none; }
+  .role__summary:hover .role__title { color: var(--accent); }
+
+  .role__chevron {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    margin-top: 0.15rem;
+    color: var(--ink-muted);
+    transition: transform 0.18s ease, color 0.18s ease;
+  }
+  details[open] .role__chevron {
+    transform: rotate(90deg);
+    color: var(--accent);
+  }
+
+  .role__title { display: block; transition: color 0.15s ease; }
+
+  .role__team {
+    display: block;
+    font-size: var(--step--1);
+    font-weight: 400;
+    color: var(--ink-muted);
+  }
+
+  .role__points {
+    margin: 0 0 var(--space-md);
+    padding-left: calc(14px + var(--space-xs));
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .role__points li {
+    position: relative;
+    padding-left: var(--space-md);
+    color: var(--ink-secondary);
+    max-width: var(--measure);
+  }
+
+  .role__points li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.65em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.55;
+  }
+</style>

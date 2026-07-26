@@ -1,0 +1,188 @@
+---
+import { skillGroups, education } from '../data/resume';
+
+// One shared scale across all groups, so bar lengths compare like for like.
+const maxYears = Math.max(...skillGroups.flatMap((g) => g.skills.map((s) => s.years)));
+---
+
+<section class="section" id="skills">
+  <div class="container">
+    <p class="section__label">Toolkit</p>
+    <h2 class="section__title">Skills, by years in the seat</h2>
+    <p class="section__intro">
+      Bar length is hands-on years on one shared scale. Two entries are marked as recent rather
+      than deep — being straight about that matters more than a longer bar.
+    </p>
+
+    <div class="skills">
+      {
+        skillGroups.map((group) => (
+          <section class="group">
+            <h3 class="group__name">{group.name}</h3>
+            <ul class="group__list">
+              {group.skills.map((skill) => (
+                <li class="skill">
+                  <div class="skill__head">
+                    <span class="skill__name">{skill.name}</span>
+                    <span class="skill__years">
+                      {skill.note ?? `${skill.years}+ yrs`}
+                    </span>
+                  </div>
+                  <div class="skill__track">
+                    <div
+                      class="skill__bar"
+                      style={`--pct:${(skill.years / maxYears) * 100}%`}
+                      data-soft={skill.note ? 'true' : 'false'}
+                    />
+                  </div>
+                  <p class="skill__detail">{skill.detail}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
+    </div>
+
+    <section class="education">
+      <h3 class="education__heading">Education</h3>
+      <ul class="education__list">
+        {
+          education.map((item) => (
+            <li class="education__item">
+              <p class="education__degree">{item.degree}</p>
+              <p class="education__school">
+                {item.school} <span class="education__year">· {item.year}</span>
+              </p>
+              <p class="education__detail">{item.detail}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </div>
+</section>
+
+<style>
+  .skills {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: var(--space-xl);
+  }
+
+  .group__name {
+    font-size: var(--step--1);
+    font-family: var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    padding-bottom: var(--space-xs);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: var(--space-md);
+  }
+
+  .group__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .skill__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-2xs);
+  }
+
+  .skill__name { font-weight: 550; }
+
+  .skill__years {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-muted);
+    white-space: nowrap;
+  }
+
+  .skill__track {
+    height: 6px;
+    background: var(--gridline);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .skill__bar {
+    height: 100%;
+    width: var(--pct);
+    border-radius: 3px;
+    background: var(--accent);
+    transform-origin: left center;
+    animation: grow 0.8s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+
+  /* Recent-but-growing skills read as an outline, so the bar never overclaims. */
+  .skill__bar[data-soft='true'] {
+    background: repeating-linear-gradient(
+      135deg,
+      var(--accent) 0 4px,
+      color-mix(in srgb, var(--accent) 35%, transparent) 4px 8px
+    );
+  }
+
+  @keyframes grow {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  .skill__detail {
+    font-size: var(--step--1);
+    color: var(--ink-secondary);
+    margin-top: var(--space-2xs);
+    line-height: 1.45;
+  }
+
+  /* ---------- education ---------- */
+
+  .education {
+    margin-top: var(--space-2xl);
+    padding-top: var(--space-xl);
+    border-top: 1px solid var(--border);
+  }
+
+  .education__heading {
+    font-size: var(--step--1);
+    font-family: var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: var(--space-md);
+  }
+
+  .education__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: var(--space-lg);
+  }
+
+  .education__degree { font-weight: 580; }
+
+  .education__school { color: var(--ink-secondary); }
+  .education__year {
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-muted);
+  }
+
+  .education__detail {
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    margin-top: var(--space-2xs);
+    line-height: 1.45;
+  }
+</style>
