@@ -69,12 +69,15 @@ export const profile = {
   email: 'gregchedwick@outlook.com',
   linkedin: 'https://www.linkedin.com/in/gregchedwick/',
   github: 'https://github.com/gregchedwick',
-  tagline: 'I turn messy operational data into metrics, dashboards, and automation people actually use.',
+  tagline:
+    'New industry, same job: I turn messy data into metrics, dashboards, and automation ' +
+    'people actually use.',
   summary:
     'Senior analytics professional with 20+ years in data analytics and 6+ years leading analytics ' +
-    'initiatives. I design scalable metrics, build dashboards that drive decisions, and automate the ' +
-    'ad-hoc work that quietly eats teams alive — most recently with AI agents built in Copilot Studio. ' +
-    'I do my best work in ambiguous 0-to-1 territory with minimal oversight.',
+    'initiatives, spanning mortgage and consumer lending, advertising, freight and supply chain, and ' +
+    'software licensing. I design scalable metrics, build dashboards that drive decisions, and automate ' +
+    'the ad-hoc work that quietly eats teams alive — most recently with AI agents built in Copilot ' +
+    'Studio. I do my best work in ambiguous 0-to-1 territory with minimal oversight.',
 } as const;
 
 /** Headline numbers for the stat tiles. Every one is traceable to a role below. */
