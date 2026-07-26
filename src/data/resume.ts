@@ -66,9 +66,7 @@ export const profile = {
   title: 'Senior Data Analyst',
   company: 'Microsoft',
   location: 'Reno, NV',
-  // TODO(greg): confirm which inbox you want public — this is the one on your resume.
   email: 'gregchedwick@outlook.com',
-  // TODO(greg): paste your LinkedIn URL here.
   linkedin: 'https://www.linkedin.com/in/gregchedwick/',
   github: 'https://github.com/gregchedwick',
   tagline: 'I turn messy operational data into metrics, dashboards, and automation people actually use.',
