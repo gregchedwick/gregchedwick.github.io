@@ -50,7 +50,7 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
       <!-- ---------- titles ---------- -->
       <figure class="panel panel--wide">
         <figcaption class="panel__head">
-          <h3 class="panel__title" data-title-heading>Top titles by opportunity score</h3>
+          <h3 class="panel__title" data-title-heading>Top Titles by Opportunity Score</h3>
           <p class="panel__note" data-title-note>
             Score blends hours viewed, sustained ranking, rating, and recency.
           </p>
@@ -78,7 +78,7 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
       <!-- ---------- genres ---------- -->
       <figure class="panel">
         <figcaption class="panel__head">
-          <h3 class="panel__title">Genres by average score</h3>
+          <h3 class="panel__title">Genres by Average Score</h3>
           <p class="panel__note">
             Averaged across every ranked title carrying that genre. Title counts vary — War is a
             small, high-performing set.
@@ -107,7 +107,7 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
       <!-- ---------- scoring model ---------- -->
       <figure class="panel">
         <figcaption class="panel__head">
-          <h3 class="panel__title">How the score is weighted</h3>
+          <h3 class="panel__title">How the Score Is Weighted</h3>
           <p class="panel__note">
             Hours viewed dominates deliberately — it is the closest available proxy for realised ad
             impressions. The rest adjust for staying power and quality.
@@ -201,19 +201,19 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     const SORTS = {
       score: {
         key: 'score' as const,
-        heading: 'Top titles by opportunity score',
+        heading: 'Top Titles by Opportunity Score',
         note: 'Score blends hours viewed, sustained ranking, rating, and recency.',
         format: (t: Title) => t.score.toFixed(0),
       },
       hoursViewed: {
         key: 'hoursViewed' as const,
-        heading: 'Top titles by hours viewed',
+        heading: 'Top Titles by Hours Viewed',
         note: 'Raw consumption — the single largest input to the score, shown on its own.',
         format: (t: Title) => `${(t.hoursViewed / 1_000_000).toFixed(0)}M`,
       },
       weeksInTop10: {
         key: 'weeksInTop10' as const,
-        heading: 'Top titles by weeks in the top 10',
+        heading: 'Top Titles by Weeks in the Top 10',
         note: 'Staying power. Note how differently this ranks from raw hours — that gap is why the score exists.',
         format: (t: Title) => `${t.weeksInTop10}w`,
       },
@@ -241,11 +241,13 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
           const li = document.createElement('li');
           li.className = 'bar-row';
           li.tabIndex = 0;
+          // Header repeats the ranked value so the tooltip matches the bar the
+          // pointer is on, whichever sort is active.
+          li.dataset.tipHead = `${t.title} - ${config.format(t)}`;
           li.dataset.tip = [
-            t.title,
-            `Opportunity score ${t.score.toFixed(1)}`,
-            `${fmtHours(t.hoursViewed)} hours viewed`,
-            `${t.weeksInTop10} weeks in top 10`,
+            `Opportunity Score ${t.score.toFixed(1)}`,
+            `${fmtHours(t.hoursViewed)} Hours Viewed`,
+            `${t.weeksInTop10} Weeks in Top 10`,
             t.voteAverage ? `Rated ${t.voteAverage}/10` : null,
             t.year ? `Released ${t.year}` : null,
           ]
@@ -279,7 +281,16 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     const showTip = (row: HTMLElement) => {
       const text = row.dataset.tip;
       if (!text) return;
-      tip.textContent = text;
+
+      const head = document.createElement('strong');
+      head.className = 'tip__head';
+      head.textContent = row.dataset.tipHead ?? '';
+
+      const body = document.createElement('span');
+      body.className = 'tip__body';
+      body.textContent = text;
+
+      tip.replaceChildren(head, body);
       tip.hidden = false;
 
       const rect = row.getBoundingClientRect();
@@ -644,9 +655,23 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     box-shadow: 0 6px 20px rgb(0 0 0 / 0.14);
     font-size: 0.75rem;
     line-height: 1.45;
-    white-space: pre-line;
     pointer-events: none;
     font-variant-numeric: tabular-nums;
   }
   .tip[hidden] { display: none; }
+
+  .tip__head {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 620;
+    padding-bottom: var(--space-2xs);
+    margin-bottom: var(--space-2xs);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tip__body {
+    display: block;
+    white-space: pre-line;
+    color: var(--ink-secondary);
+  }
 </style>

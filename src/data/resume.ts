@@ -71,7 +71,7 @@ export const profile = {
   github: 'https://github.com/gregchedwick',
   tagline: 'I turn messy operational data into metrics, dashboards, and automation people actually use.',
   summary:
-    'Senior analytics professional with 9+ years in data analytics and 6+ years leading analytics ' +
+    'Senior analytics professional with 20+ years in data analytics and 6+ years leading analytics ' +
     'initiatives. I design scalable metrics, build dashboards that drive decisions, and automate the ' +
     'ad-hoc work that quietly eats teams alive — most recently with AI agents built in Copilot Studio. ' +
     'I do my best work in ambiguous 0-to-1 territory with minimal oversight.',
@@ -204,8 +204,12 @@ export const skillGroups: SkillGroup[] = [
     name: 'Data & BI',
     skills: [
       { name: 'SQL', years: 15, detail: 'Complex querying, data modeling, large-scale analysis' },
-      { name: 'Power BI & DAX', years: 9, detail: 'Interactive dashboards, reporting, visualization' },
-      { name: 'SSMS', years: 10, detail: 'Manage, query, and administer databases' },
+      { name: 'Power BI & DAX', years: 10, detail: 'Interactive dashboards, reporting, visualization' },
+      {
+        name: 'SSMS & VS Code',
+        years: 10,
+        detail: 'Data modeling, analysis, AI-assisted coding with Claude Code and Copilot CLI',
+      },
     ],
   },
   {
@@ -213,13 +217,18 @@ export const skillGroups: SkillGroup[] = [
     skills: [
       { name: 'Microsoft Fabric & SSIS', years: 10, detail: 'ETL pipelines, SQL databases, lakehouses' },
       { name: 'Azure DevOps', years: 10, detail: 'Plan, build, test, and deploy solutions' },
+      {
+        name: 'Azure Platform Services',
+        years: 5,
+        detail: 'Function Apps, Logic Apps, Data Factory, serverless automation',
+      },
       { name: 'Python', years: 2, note: 'Growing', detail: 'Data manipulation, scripting, automation' },
     ],
   },
   {
     name: 'Automation & AI',
     skills: [
-      { name: 'Power Automate & Power Apps', years: 5, detail: 'Workflow automation and self-service tools' },
+      { name: 'Power Automate & Power Apps', years: 7, detail: 'Workflow automation and self-service tools' },
       { name: 'Microsoft Copilot Studio', years: 2, note: 'Recent', detail: 'AI agents, low-code intelligent automation' },
     ],
   },

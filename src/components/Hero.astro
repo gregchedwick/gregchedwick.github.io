@@ -32,8 +32,13 @@ import { profile } from '../data/resume';
 
     <div class="hero__portrait">
       {/*
+        portrait.jpeg is a 4:5 crop of Pictures/Greg 3.jpeg — crop box
+        (406, 250, 2414, 2760) on the 3000x2760 master, which puts the eyes on
+        the 40% line and centres the face. Re-crop from the master if it ever
+        needs adjusting; the aspect must stay 4:5 to match the frame below.
+
         `width` pins the plain `src` fallback to 640px. Without it Astro points
-        src at the 3000px original — a 728kB download for a 20rem slot.
+        src at the full-size original — a needless download for a 20rem slot.
       */}
       <Image
         src={portrait}
@@ -172,13 +177,14 @@ import { profile } from '../data/resume';
     width: clamp(9rem, 34vw, 12rem);
   }
 
+  /* 4:5 at every width — the asset is already cropped to 4:5, so nothing is
+     cut here. A square frame would slice off his chin. */
   .hero__portrait :global(img) {
     display: block;
     width: 100%;
     height: auto;
-    aspect-ratio: 1;
+    aspect-ratio: 4 / 5;
     object-fit: cover;
-    object-position: 50% 22%;
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
     filter: saturate(0.96);
@@ -192,6 +198,5 @@ import { profile } from '../data/resume';
       gap: var(--space-2xl);
     }
     .hero__portrait { width: 20rem; }
-    .hero__portrait :global(img) { aspect-ratio: 4 / 5; }
   }
 </style>
