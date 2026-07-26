@@ -762,73 +762,106 @@
       "genre": "War",
       "avgScore": 40.7,
       "titleCount": 7,
-      "totalHours": 313100000
+      "totalHours": 313100000,
+      "avgWeeks": 2.1
     },
     {
       "genre": "Romance",
       "avgScore": 26.7,
       "titleCount": 24,
-      "totalHours": 697300000
+      "totalHours": 697300000,
+      "avgWeeks": 2.5
     },
     {
       "genre": "Science Fiction",
       "avgScore": 26.5,
       "titleCount": 33,
-      "totalHours": 953400000
+      "totalHours": 953400000,
+      "avgWeeks": 2.2
     },
     {
       "genre": "Comedy",
       "avgScore": 23.8,
       "titleCount": 81,
-      "totalHours": 2091900000
+      "totalHours": 2091900000,
+      "avgWeeks": 2.6
     },
     {
       "genre": "Drama",
       "avgScore": 21.9,
       "titleCount": 74,
-      "totalHours": 1756700000
+      "totalHours": 1756700000,
+      "avgWeeks": 2.1
     },
     {
       "genre": "Thriller",
       "avgScore": 21.2,
       "titleCount": 72,
-      "totalHours": 1653300000
+      "totalHours": 1653300000,
+      "avgWeeks": 2.1
     },
     {
       "genre": "Action",
       "avgScore": 19.7,
       "titleCount": 97,
-      "totalHours": 2068800000
+      "totalHours": 2068800000,
+      "avgWeeks": 2.1
     },
     {
       "genre": "Horror",
       "avgScore": 19.4,
       "titleCount": 20,
-      "totalHours": 420200000
+      "totalHours": 420200000,
+      "avgWeeks": 1.9
     },
     {
       "genre": "Adventure",
       "avgScore": 19.1,
       "titleCount": 63,
-      "totalHours": 1302000000
+      "totalHours": 1302000000,
+      "avgWeeks": 2.3
     },
     {
       "genre": "Animation",
       "avgScore": 18.9,
       "titleCount": 40,
-      "totalHours": 811200000
+      "totalHours": 811200000,
+      "avgWeeks": 2.9
     },
     {
       "genre": "Crime",
       "avgScore": 18.5,
       "titleCount": 38,
-      "totalHours": 760800000
+      "totalHours": 760800000,
+      "avgWeeks": 1.9
     },
     {
       "genre": "Fantasy",
       "avgScore": 18.2,
       "titleCount": 31,
-      "totalHours": 608900000
+      "totalHours": 608900000,
+      "avgWeeks": 2.3
+    },
+    {
+      "genre": "Mystery",
+      "avgScore": 17.8,
+      "titleCount": 15,
+      "totalHours": 288900000,
+      "avgWeeks": 1.7
+    },
+    {
+      "genre": "History",
+      "avgScore": 17.4,
+      "titleCount": 8,
+      "totalHours": 150600000,
+      "avgWeeks": 2.0
+    },
+    {
+      "genre": "Family",
+      "avgScore": 17.3,
+      "titleCount": 48,
+      "totalHours": 893100000,
+      "avgWeeks": 2.6
     }
   ],
   "weights": [

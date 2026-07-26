@@ -74,12 +74,14 @@ def main() -> None:
 
         buckets: dict[str, list[float]] = defaultdict(list)
         hours: dict[str, list[float]] = defaultdict(list)
+        weeks: dict[str, list[float]] = defaultdict(list)
         for _, row in gdf.iterrows():
             name = str(row[genre_col]).strip()
             if not name or name.lower() == "nan":
                 continue
             buckets[name].append(float(row["ad_opportunity_score"]))
             hours[name].append(float(clean(row.get("total_hours_viewed"), 0)))
+            weeks[name].append(float(clean(row.get("weeks_in_top10"), 0)))
 
         for name, scores in buckets.items():
             if len(scores) < MIN_TITLES_PER_GENRE:
@@ -89,7 +91,11 @@ def main() -> None:
                     "genre": name,
                     "avgScore": round(sum(scores) / len(scores), 1),
                     "titleCount": len(scores),
+                    # Totals for hours, averages for weeks: hours measure the
+                    # size of the inventory a genre represents, while weeks
+                    # measure how long a typical title in it holds attention.
                     "totalHours": int(sum(hours[name])),
+                    "avgWeeks": round(sum(weeks[name]) / len(weeks[name]), 1),
                 }
             )
         genres.sort(key=lambda g: g["avgScore"], reverse=True)
@@ -115,7 +121,7 @@ def main() -> None:
         "titleCount": int(len(df)),
         "genreCoverage": {"tagged": tagged, "total": len(titles)},
         "titles": titles,
-        "genres": genres[:12],
+        "genres": genres,
         # The weighting model behind the score. Percentages are the midpoints of
         # the ranges documented in the project README.
         "weights": [

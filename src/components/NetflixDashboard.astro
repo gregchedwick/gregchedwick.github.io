@@ -47,13 +47,12 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     </p>
 
     <!--
-      Filters sit above the charts, boxed to the width of a single panel. The
-      outer grid mirrors the panels grid so column 1 lines up exactly; auto-fill
-      rather than auto-fit, so the empty tracks hold their width instead of
-      collapsing and letting the filters stretch across the whole row.
+      Two columns: the tall titles chart on the left, and the filters stacked
+      above genres and the weighting model on the right. DOM order puts the
+      filters first so they are reached before the charts they drive.
     -->
-    <div class="controls">
-      <div class="controls__inner">
+    <div class="dashboard">
+      <div class="controls">
         <fieldset class="control">
           <legend class="control__label">Rank by</legend>
           <div class="segmented" role="group">
@@ -72,12 +71,12 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
             <option value="30">30</option>
           </select>
         </label>
-      </div>
-    </div>
 
-    <div class="panels">
+        <p class="controls__note">Both charts respond to these.</p>
+      </div>
+
       <!-- ---------- titles ---------- -->
-      <figure class="panel">
+      <figure class="panel panel--titles">
         <figcaption class="panel__head">
           <h3 class="panel__title" data-title-heading>Top Titles by Opportunity Score</h3>
           <p class="panel__note" data-title-note>
@@ -115,16 +114,16 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
       </figure>
 
       <!-- ---------- genres ---------- -->
-      <figure class="panel">
+      <figure class="panel panel--genres">
         <figcaption class="panel__head">
-          <h3 class="panel__title">Genres by Average Score</h3>
-          <p class="panel__note">
+          <h3 class="panel__title" data-genre-heading>Genres by Average Score</h3>
+          <p class="panel__note" data-genre-note>
             Averaged across every ranked title carrying that genre. Title counts vary — War is a
             small, high-performing set.
           </p>
         </figcaption>
 
-        <ol class="bars bars--genre">
+        <ol class="bars bars--genre" data-genres>
           {
             topGenres.map((g) => (
               <li class="bar-row">
@@ -149,7 +148,7 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
       </figure>
 
       <!-- ---------- scoring model ---------- -->
-      <figure class="panel">
+      <figure class="panel panel--weights">
         <figcaption class="panel__head">
           <h3 class="panel__title">How the Score Is Weighted</h3>
           <p class="panel__note">
@@ -239,10 +238,14 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
   import titleData from '../data/netflix-ads.json';
 
   type Title = (typeof titleData.titles)[number];
+  type Genre = (typeof titleData.genres)[number];
 
   const list = document.querySelector<HTMLOListElement>('[data-titles]');
   const heading = document.querySelector<HTMLElement>('[data-title-heading]');
   const note = document.querySelector<HTMLElement>('[data-title-note]');
+  const genreList = document.querySelector<HTMLOListElement>('[data-genres]');
+  const genreHeading = document.querySelector<HTMLElement>('[data-genre-heading]');
+  const genreNote = document.querySelector<HTMLElement>('[data-genre-note]');
   const countSelect = document.querySelector<HTMLSelectElement>('[data-count]');
   const sortButtons = document.querySelectorAll<HTMLButtonElement>('[data-sort]');
   const tip = document.querySelector<HTMLElement>('[data-tip]');
@@ -276,6 +279,33 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
       },
     };
 
+    /*
+     * The genre panel answers the same three questions at genre level. Hours are
+     * a total — the size of the inventory a genre represents — while score and
+     * weeks are averages, since a genre with 81 titles would otherwise win those
+     * on volume alone.
+     */
+    const GENRE_SORTS = {
+      score: {
+        key: 'avgScore' as const,
+        heading: 'Genres by Average Score',
+        note: 'Averaged across every ranked title carrying that genre. Title counts vary — War is a small, high-performing set.',
+        format: (g: Genre) => fmtDec(g.avgScore),
+      },
+      hoursViewed: {
+        key: 'totalHours' as const,
+        heading: 'Genres by Total Hours Viewed',
+        note: 'Total rather than average — this is the size of the ad inventory each genre represents, so the broad genres rightly dominate.',
+        format: (g: Genre) => fmtInt(g.totalHours),
+      },
+      weeksInTop10: {
+        key: 'avgWeeks' as const,
+        heading: 'Genres by Average Weeks in Top 10',
+        note: 'How long a typical title in the genre holds its place. A different ordering again from either score or raw hours.',
+        format: (g: Genre) => fmtDec(g.avgWeeks),
+      },
+    };
+
     let sort: keyof typeof SORTS = 'score';
     let count = 12;
 
@@ -293,6 +323,59 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     const prototype = list.querySelector<HTMLLIElement>('.bar-row')?.cloneNode(true) as
       | HTMLLIElement
       | undefined;
+    const genrePrototype = genreList?.querySelector<HTMLLIElement>('.bar-row')?.cloneNode(true) as
+      | HTMLLIElement
+      | undefined;
+
+    /** Where a bar chart's axis should end — see the note in the frontmatter. */
+    const axisFor = (values: number[]) => {
+      const highest = Math.max(...values);
+      const [, second] = [...values].sort((a, b) => b - a);
+      return second && highest > second * 1.8 ? second * 1.12 : highest;
+    };
+
+    const renderGenres = () => {
+      if (!genreList || !genrePrototype) return;
+      const config = GENRE_SORTS[sort];
+      const rows = [...titleData.genres]
+        .sort((a, b) => (b[config.key] as number) - (a[config.key] as number))
+        .slice(0, Math.min(count, titleData.genres.length));
+
+      const axis = axisFor(rows.map((r) => r[config.key] as number));
+
+      if (genreHeading) genreHeading.textContent = config.heading;
+      if (genreNote) genreNote.textContent = config.note;
+
+      genreList.replaceChildren(
+        ...rows.map((g) => {
+          const li = genrePrototype.cloneNode(true) as HTMLLIElement;
+
+          const title = li.querySelector<HTMLElement>('.bar-row__title');
+          if (title) title.textContent = g.genre;
+
+          const value = li.querySelector<HTMLElement>('.bar-row__value');
+          if (value) value.textContent = `- ${config.format(g)}`;
+
+          const magnitude = g[config.key] as number;
+          const bar = li.querySelector<HTMLElement>('.bar-row__bar');
+          if (bar) {
+            bar.dataset.clipped = magnitude > axis ? 'true' : 'false';
+            bar.style.setProperty('--pct', `${Math.min(100, (magnitude / axis) * 100)}%`);
+          }
+
+          const meta = li.querySelector<HTMLElement>('.bar-row__meta');
+          if (meta) {
+            meta.textContent = [
+              `${fmtInt(g.titleCount)} titles`,
+              `${fmtHours(g.totalHours)} hrs`,
+              `${fmtDec(g.avgWeeks)} wks avg`,
+            ].join(' · ');
+          }
+
+          return li;
+        }),
+      );
+    };
 
     const render = () => {
       if (!prototype) return;
@@ -303,10 +386,7 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
 
       // Recomputed per sort — every measure has the same dominant title, so the
       // cap applies across all three filters, not just the default one.
-      const values = rows.map((r) => r[config.key] as number);
-      const highest = Math.max(...values);
-      const [, second] = [...values].sort((a, b) => b - a);
-      const axis = second && highest > second * 1.8 ? second * 1.12 : highest;
+      const axis = axisFor(rows.map((r) => r[config.key] as number));
 
       if (heading) heading.textContent = config.heading;
       if (note) note.textContent = config.note;
@@ -411,6 +491,12 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
 
     // --- controls ---
 
+    // Both charts redraw together — the filters govern the whole dashboard.
+    const renderAll = () => {
+      render();
+      renderGenres();
+    };
+
     for (const button of sortButtons) {
       button.addEventListener('click', () => {
         sort = button.dataset.sort as keyof typeof SORTS;
@@ -418,17 +504,17 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
           other.setAttribute('aria-pressed', String(other === button));
         }
         hideTip();
-        render();
+        renderAll();
       });
     }
 
     countSelect?.addEventListener('change', () => {
       count = Number(countSelect.value);
       hideTip();
-      render();
+      renderAll();
     });
 
-    render();
+    renderAll();
   }
 </script>
 
@@ -437,20 +523,22 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
 
   /* ---------- controls ---------- */
 
-  /* Same track sizing as .panels, so the filters occupy exactly column 1. */
+  /* A grid cell now, so it needs no width trickery of its own. */
   .controls {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-    gap: var(--space-md);
-    margin-bottom: var(--space-lg);
-  }
-
-  .controls__inner {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-sm);
     min-width: 0;
+    padding: var(--space-md) var(--space-lg) var(--space-lg);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .controls__note {
+    font-size: 0.72rem;
+    color: var(--ink-muted);
   }
 
   .control {
@@ -519,14 +607,28 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
 
   /* ---------- panels ---------- */
 
-  /* Three equal columns on a wide screen, so titles / genres / weights sit in
-     one row. The titles panel used to span two of them, which pushed the
-     weights panel onto a second row and left most of that row empty. */
-  .panels {
+  /* The dashboard runs wider than the rest of the page — a chart grid needs the
+     room, and body copy elsewhere does not. */
+  .netflix > .container { max-width: 1360px; }
+
+  /* Single column while narrow; DOM order (filters, titles, genres, weights)
+     is already the right reading order there. */
+  .dashboard {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
     gap: var(--space-md);
     align-items: start;
+  }
+
+  @media (min-width: 60rem) {
+    .dashboard {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+    /* Titles runs the full height of the left column; the right column stacks
+       filters, genres, and the weighting model. */
+    .panel--titles  { grid-column: 1; grid-row: 1 / span 3; }
+    .controls       { grid-column: 2; grid-row: 1; }
+    .panel--genres  { grid-column: 2; grid-row: 2; }
+    .panel--weights { grid-column: 2; grid-row: 3; }
   }
 
   .panel {

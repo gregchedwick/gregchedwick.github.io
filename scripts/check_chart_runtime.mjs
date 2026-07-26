@@ -68,7 +68,16 @@ const body = doc.querySelector('[data-tip-body]');
 check('tooltip head carries scope', Boolean(head?.hasAttribute(cid)));
 check('tooltip body carries scope', Boolean(body?.hasAttribute(cid)));
 
-// Re-sorting must keep all of the above true.
+// The genre panel is client-rendered too, so it needs the same guarantees.
+const genreRows = [...doc.querySelectorAll('[data-genres] .bar-row')];
+check('genre rows rendered', genreRows.length > 0, `${genreRows.length} rows`);
+check('genre bars carry scope', genreRows.every((r) => r.querySelector('.bar-row__bar')?.hasAttribute(cid)));
+check('genre bars have widths', genreRows.every((r) => {
+  const w = r.querySelector('.bar-row__bar')?.style.getPropertyValue('--pct');
+  return w && w !== '0%';
+}));
+
+// Re-sorting must keep all of the above true, for both charts.
 doc.querySelector('[data-sort="hoursViewed"]').click();
 const after = [...doc.querySelectorAll('[data-titles] .bar-row')];
 check('re-sort keeps scope attribute', after.every((r) => r.querySelector('.bar-row__bar')?.hasAttribute(cid)));
@@ -76,9 +85,27 @@ check('re-sort keeps widths', after.every((r) => {
   const w = r.querySelector('.bar-row__bar')?.style.getPropertyValue('--pct');
   return w && w !== '0%';
 }));
-check('re-sort updates heading',
+check('re-sort updates title heading',
   doc.querySelector('[data-title-heading]').textContent === 'Top Titles by Hours Viewed',
   doc.querySelector('[data-title-heading]').textContent);
+check('re-sort updates genre heading',
+  doc.querySelector('[data-genre-heading]').textContent === 'Genres by Total Hours Viewed',
+  doc.querySelector('[data-genre-heading]').textContent);
+
+// The genre ordering must actually change, not merely the label above it.
+const orderFor = () => [...doc.querySelectorAll('[data-genres] .bar-row__title')].map((e) => e.textContent);
+const byHours = orderFor();
+doc.querySelector('[data-sort="weeksInTop10"]').click();
+const byWeeks = orderFor();
+check('genre order responds to filter', byHours.join() !== byWeeks.join(),
+  `${byHours[0]} -> ${byWeeks[0]}`);
+check('genre rows survive re-sort',
+  [...doc.querySelectorAll('[data-genres] .bar-row')].every((r) => r.querySelector('.bar-row__bar')?.hasAttribute(cid)));
+
+// Layout: filters and the two right-column panels must exist as grid items.
+for (const sel of ['.dashboard', '.controls', '.panel--titles', '.panel--genres', '.panel--weights']) {
+  check(`${sel} present`, Boolean(doc.querySelector(sel)));
+}
 
 console.log();
 if (failures.length) {
