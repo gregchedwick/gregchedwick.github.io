@@ -1,7 +1,7 @@
 # gregchedwick.dev
 
 Personal portfolio site — an interactive resume and a home for the analytics projects I build
-outside work. Live at **[gregchedwick.github.io](https://gregchedwick.github.io)**.
+outside work. Live at **[gregchedwick.dev](https://gregchedwick.dev)**.
 
 The idea: rather than a resume page that links to projects, the resume *is* a dashboard. Career
 impact renders as live data visualization, and the Netflix Ads Analytics project ships as a real
@@ -85,14 +85,23 @@ so the figures are correct without JavaScript.
 Every push to `main` triggers `.github/workflows/deploy.yml`, which builds and publishes to GitHub
 Pages.
 
-### Attaching the custom domain
+### Custom domain
 
-Once `gregchedwick.dev` is registered:
+`gregchedwick.dev` is registered through Cloudflare, which also serves its DNS:
 
-1. Add `public/CNAME` containing `gregchedwick.dev`
-2. DNS — apex `A` records to `185.199.108.153`, `.109.153`, `.110.153`, `.111.153`;
-   `CNAME` for `www` → `gregchedwick.github.io`
-3. Repo Settings → Pages → set the custom domain, tick **Enforce HTTPS**
-4. Update `site:` in `astro.config.mjs`
+| Type | Name | Value |
+|---|---|---|
+| A | `@` | `185.199.108.153`, `.109.153`, `.110.153`, `.111.153` |
+| CNAME | `www` | `gregchedwick.github.io` |
 
-`.dev` is HSTS-preloaded, so step 3 is not optional.
+Two things about this setup are load-bearing:
+
+- **The DNS records are unproxied** (Cloudflare grey cloud). Proxied, the ACME challenge never
+  reaches GitHub and the certificate silently never issues. Turning the proxy on later requires
+  SSL/TLS mode **Full (strict)**, or requests loop between Cloudflare and GitHub.
+- **`public/CNAME` ships in the build.** This repo publishes from an Actions artifact, so a custom
+  domain set only in the repo settings would be cleared on the next deploy.
+
+`.dev` is HSTS-preloaded across the whole TLD, so HTTPS is mandatory rather than advisory — a
+missing certificate makes the site unreachable, not merely insecure. Enforce HTTPS is on and the
+Let's Encrypt certificate renews automatically.
