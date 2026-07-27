@@ -68,7 +68,7 @@ export const profile = {
   linkedin: 'https://www.linkedin.com/in/gregchedwick/',
   github: 'https://github.com/gregchedwick',
   tagline:
-    'Domain agnostic: I build the pipelines, then the dashboards and automation ' +
+    'Domain agnostic: I build the data models, then the dashboards and automation ' +
     'people actually use.',
   summary:
     'Senior engineering and analytics professional with 20+ years in data analytics, 6+ of them ' +
