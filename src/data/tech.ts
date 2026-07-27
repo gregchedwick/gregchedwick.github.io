@@ -37,6 +37,17 @@ export const tech: Tech[] = [
            <path d="M4.5 12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>`,
   },
   {
+    name: 'KQL',
+    color: '#3c4fa8',
+    colorDark: '#8f9de8',
+    years: 5,
+    detail: 'Kusto queries over log and telemetry data',
+    // Log lines under a magnifier — a query over records, distinct from SQL's cylinder.
+    icon: `<path d="M3 5.5h13M3 10h13M3 14.5h7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+           <circle cx="15.5" cy="16.5" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+           <path d="m18.6 19.6 2.4 2.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>`,
+  },
+  {
     name: 'Power BI',
     color: '#b8860b',
     colorDark: '#f2c811',

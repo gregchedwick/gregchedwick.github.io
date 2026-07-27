@@ -101,8 +101,15 @@ if (cssHref) {
 }
 
 console.log();
+
+// The page runs a requestAnimationFrame loop for the ticker, which jsdom keeps
+// servicing forever — without tearing the window down and exiting explicitly,
+// this process never returns.
+dom.window.close();
+
 if (failures.length) {
   console.error(`${failures.length} FAILED:\n  ` + failures.join('\n  '));
   process.exit(1);
 }
 console.log('All nav runtime checks passed.');
+process.exit(0);

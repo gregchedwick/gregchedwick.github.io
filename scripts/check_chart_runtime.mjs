@@ -108,8 +108,14 @@ for (const sel of ['.dashboard', '.controls', '.panel--titles', '.panel--genres'
 }
 
 console.log();
+
+// Tear the window down and exit explicitly: any requestAnimationFrame loop on
+// the page keeps jsdom's event loop alive indefinitely.
+dom.window.close();
+
 if (failures.length) {
   console.error(`${failures.length} FAILED:\n  ` + failures.join('\n  '));
   process.exit(1);
 }
 console.log('All runtime checks passed.');
+process.exit(0);

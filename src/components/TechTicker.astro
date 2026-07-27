@@ -60,6 +60,10 @@ const label = (item: (typeof tech)[number]) =>
     const metaEl = card.querySelector<HTMLElement>('[data-card-meta]');
     const detailEl = card.querySelector<HTMLElement>('[data-card-detail]');
 
+    const viewport = ticker.querySelector<HTMLElement>('.ticker__viewport');
+    let paused = false;
+    let dragging = false;
+
     const show = (chip: HTMLElement) => {
       if (nameEl) nameEl.textContent = chip.dataset.name ?? '';
       if (metaEl) metaEl.textContent = chip.dataset.meta ?? '';
@@ -67,7 +71,7 @@ const label = (item: (typeof tech)[number]) =>
 
       // Freeze the scroll first: the card is positioned from the chip's box, and
       // a moving chip would leave the card behind.
-      track.style.animationPlayState = 'paused';
+      paused = true;
       card.hidden = false;
 
       const chipBox = chip.getBoundingClientRect();
@@ -82,7 +86,7 @@ const label = (item: (typeof tech)[number]) =>
 
     const hide = () => {
       card.hidden = true;
-      track.style.animationPlayState = '';
+      paused = false;
     };
 
     // Pointer and keyboard both drive the same path, so the ticker is fully
@@ -106,6 +110,95 @@ const label = (item: (typeof tech)[number]) =>
         (document.activeElement as HTMLElement)?.blur();
       }
     });
+
+    // --- scrolling: automatic, and grabbable ---
+
+    if (viewport && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const SPEED = 26; // px per second
+      let pos = 0;
+      let last = 0;
+
+      // The list is rendered twice, so scrolling exactly half its width lands on
+      // an identical frame — wrapping there is invisible.
+      const halfWidth = () => track.scrollWidth / 2;
+
+      const wrap = () => {
+        const half = halfWidth();
+        if (half <= 0) return;
+        if (pos >= half) pos -= half;
+        if (pos < 0) pos += half;
+      };
+
+      const frame = (now: number) => {
+        const dt = last ? (now - last) / 1000 : 0;
+        last = now;
+        if (!paused && !dragging) {
+          pos += SPEED * dt;
+          wrap();
+          viewport.scrollLeft = pos;
+        }
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+
+      // Trackpad and wheel scrolling bypass `pos`, so re-sync from the element.
+      viewport.addEventListener(
+        'scroll',
+        () => {
+          if (!dragging) pos = viewport.scrollLeft;
+        },
+        { passive: true },
+      );
+
+      let startX = 0;
+      let startScroll = 0;
+      let moved = 0;
+
+      viewport.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        dragging = true;
+        moved = 0;
+        startX = event.clientX;
+        startScroll = viewport.scrollLeft;
+        viewport.setPointerCapture(event.pointerId);
+        viewport.dataset.dragging = '';
+        hide();
+      });
+
+      viewport.addEventListener('pointermove', (event) => {
+        if (!dragging) return;
+        const delta = event.clientX - startX;
+        moved = Math.max(moved, Math.abs(delta));
+        pos = startScroll - delta;
+        wrap();
+        viewport.scrollLeft = pos;
+      });
+
+      const endDrag = (event: PointerEvent) => {
+        if (!dragging) return;
+        dragging = false;
+        delete viewport.dataset.dragging;
+        if (viewport.hasPointerCapture(event.pointerId)) {
+          viewport.releasePointerCapture(event.pointerId);
+        }
+        pos = viewport.scrollLeft;
+      };
+
+      viewport.addEventListener('pointerup', endDrag);
+      viewport.addEventListener('pointercancel', endDrag);
+
+      // A drag that ends on a chip must not read as a click on it.
+      viewport.addEventListener(
+        'click',
+        (event) => {
+          if (moved > 6) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        },
+        true,
+      );
+    }
   }
 </script>
 
@@ -117,10 +210,26 @@ const label = (item: (typeof tech)[number]) =>
     border-block: 1px solid var(--border);
   }
 
+  /*
+    Scrolled rather than transformed. The previous version animated
+    translateX, which cannot be grabbed — a drag would have fought the
+    animation. Driving scrollLeft instead means the pointer, a trackpad, a
+    touch swipe and the keyboard all move the same thing.
+  */
   .ticker__viewport {
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+    cursor: grab;
+    /* Ours to draw; the fade already signals there is more to see. */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     /* Fade the ends so items enter and leave rather than popping at a hard edge. */
     mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  }
+  .ticker__viewport::-webkit-scrollbar { display: none; }
+  .ticker__viewport[data-dragging] {
+    cursor: grabbing;
+    user-select: none;
   }
 
   .ticker__track {
@@ -131,17 +240,6 @@ const label = (item: (typeof tech)[number]) =>
     list-style: none;
     padding: 0;
     margin: 0;
-    animation: scroll 46s linear infinite;
-  }
-
-  .ticker:hover .ticker__track,
-  .ticker:focus-within .ticker__track {
-    animation-play-state: paused;
-  }
-
-  @keyframes scroll {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
   }
 
   .ticker__item { flex: 0 0 auto; }
@@ -246,9 +344,12 @@ const label = (item: (typeof tech)[number]) =>
   /* A moving marquee is exactly what reduced-motion is for: fall back to a
      static wrapped row that still hovers and still shows the detail card. */
   @media (prefers-reduced-motion: reduce) {
-    .ticker__viewport { mask-image: none; }
+    .ticker__viewport {
+      mask-image: none;
+      overflow-x: visible;
+      cursor: auto;
+    }
     .ticker__track {
-      animation: none;
       flex-wrap: wrap;
       width: auto;
       justify-content: center;

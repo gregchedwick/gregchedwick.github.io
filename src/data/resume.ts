@@ -207,6 +207,9 @@ export const skillGroups: SkillGroup[] = [
     name: 'Data & BI',
     skills: [
       { name: 'SQL', years: 15, detail: 'Complex querying, data modeling, large-scale analysis' },
+      // The resume combines these as "SQL/KQL (15+/ 5+ years)". Split here because
+      // bar length is years — one row would have to claim 15 for both.
+      { name: 'KQL', years: 5, detail: 'Kusto queries over log and telemetry data' },
       { name: 'Power BI & DAX', years: 10, detail: 'Interactive dashboards, reporting, visualization' },
       {
         name: 'SSMS & VS Code',
