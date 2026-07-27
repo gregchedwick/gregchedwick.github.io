@@ -71,7 +71,7 @@ const totalYears = lastYear - firstYear;
 
     <ol class="timeline">
       {
-        tenures.map((tenure) => (
+        tenures.map((tenure, tenureIndex) => (
           <li class="timeline__item">
             <div class="timeline__marker" aria-hidden="true">
               <span class="timeline__dot" data-current={tenure.current ? 'true' : 'false'} />
@@ -90,7 +90,13 @@ const totalYears = lastYear - firstYear;
               <ul class="roles">
                 {tenure.roles.map((role, index) => (
                   <li class="role">
-                    <details open={index === 0}>
+                    {/*
+                      Only the current role starts open. The two bank roles carry
+                      ten achievements each now, so opening the first role of every
+                      employer would put two dozen bullets on screen before a
+                      reader has decided they care.
+                    */}
+                    <details open={tenureIndex === 0 && index === 0}>
                       <summary class="role__summary">
                         <span class="role__chevron" aria-hidden="true">
                           <svg viewBox="0 0 16 16" width="14" height="14">
@@ -104,8 +110,9 @@ const totalYears = lastYear - firstYear;
                             />
                           </svg>
                         </span>
-                        <span>
+                        <span class="role__label">
                           <span class="role__title">{role.title}</span>
+                          {role.dates && <span class="role__dates">{role.dates}</span>}
                           {role.team && <span class="role__team">{role.team}</span>}
                         </span>
                       </summary>
@@ -321,7 +328,19 @@ const totalYears = lastYear - firstYear;
     color: var(--accent);
   }
 
+  .role__label { min-width: 0; }
+
   .role__title { display: block; transition: color 0.15s ease; }
+
+  .role__dates {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-secondary);
+    margin-top: 1px;
+  }
 
   .role__team {
     display: block;

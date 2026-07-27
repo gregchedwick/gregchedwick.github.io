@@ -25,6 +25,8 @@ export interface Role {
   title: string;
   /** Team or org, where the resume names one */
   team?: string;
+  /** Date range, where the resume gives one per role rather than per employer */
+  dates?: string;
   achievements: string[];
 }
 
@@ -38,11 +40,7 @@ export interface Tenure {
   endYear: number;
   /** true = current employer, rendered as "Present" */
   current?: boolean;
-  /**
-   * Roles held, most recent first. Individual role dates are deliberately
-   * omitted — the resume gives dates per employer, not per promotion, and
-   * inventing them would put fiction on a page recruiters may verify.
-   */
+  /** Roles held, most recent first. */
   roles: Role[];
 }
 
@@ -73,11 +71,12 @@ export const profile = {
     'Domain agnostic: I turn messy data into metrics, dashboards, and automation ' +
     'people actually use.',
   summary:
-    'Senior analytics professional with 20+ years in data analytics and 6+ years leading analytics ' +
-    'initiatives, spanning software licensing, mortgage and consumer lending, advertising, supply ' +
-    'chain, and freight. I design scalable metrics, build dashboards that drive decisions, and automate ' +
-    'the manual work that quietly eats teams alive — most recently with AI agents built in Copilot ' +
-    'Studio. I do my best work in ambiguous 0-to-1 territory with minimal oversight.',
+    'Senior engineering and analytics professional with 20+ years in data analytics and 6+ years ' +
+    'leading analytics initiatives, spanning software licensing, mortgage and consumer lending, ' +
+    'advertising, supply chain, and freight. I design and engineer scalable data solutions — modeling, ' +
+    'transformation, warehousing, and ETL pipelines in SQL and Python — then build the dashboards and ' +
+    'AI-driven automation that sit on top of them, treating data quality and privacy as requirements ' +
+    'rather than afterthoughts. I do my best work in ambiguous 0-to-1 territory with minimal oversight.',
 } as const;
 
 /** Headline numbers for the stat tiles. Every one is traceable to a role below. */
@@ -140,6 +139,7 @@ export const tenures: Tenure[] = [
       {
         title: 'Senior Data Analyst',
         team: 'Fusion Development, Operations Service Center',
+        dates: 'Aug 2022 – Present',
         achievements: [
           'Engineered scalable licensing data models, automated workflows, and developed Power Apps that automated anniversary and mid-term ordering — saving 4,300+ hours annually and enabling 3x business scaling over two years.',
           'Developed compliance analytics metrics and Power BI dashboards giving visibility into a $3.2B+ agreement portfolio, driving a $106M increase in on-time renewals.',
@@ -150,6 +150,7 @@ export const tenures: Tenure[] = [
       {
         title: 'Business Analytics Specialist',
         team: 'Business Process & Analytics, Commercial Ops',
+        dates: 'Aug 2018 – Jul 2022',
         achievements: [
           'Led global analytics backlog prioritization using Cost of Delay / Weighted Shortest Job First within a SAFe framework, ensuring timely deployment of high-impact BI across software licensing, advertising, and supply chain.',
           'Partnered with cross-functional stakeholders to define requirements and ship scalable dashboards that informed decisions and supported new program launches.',
@@ -159,6 +160,7 @@ export const tenures: Tenure[] = [
       {
         title: 'Business Operations Analyst',
         team: 'Process Management, Commercial Ops',
+        dates: 'Jun 2015 – Jul 2018',
         achievements: [
           'Crafted data-driven business cases using DMAIC and Agile methodologies, substantiating improvements that cut costs by $31M, reduced AR exposure by $400M, and enabled $5.7B in revenue.',
           'Engineered BI solutions and monitoring dashboards to track outcomes of process and system improvements.',
@@ -177,8 +179,18 @@ export const tenures: Tenure[] = [
       {
         title: 'Vice President, Consumer Products Strategic Manager',
         team: 'Loan Loss Mitigation and Portfolio Analytics',
+        dates: 'Aug 2010 – May 2015',
         achievements: [
           'Led the analytics team behind loan modification campaigns, remediating a $60B+ portfolio and supporting $25B+ in government programs through advanced BI and reporting.',
+          'Managed BI strategy, reporting, and operational process for Enterprise Complaint Resolution, covering mortgage, credit card, and deposit escalations from state attorneys general, elected officials, the CFPB, the OCC, and other regulators.',
+          'Presented program performance, risk trends, and operational insight to executive leadership, advising on initiatives that improved complaint resolution efficiency and regulatory compliance.',
+          'Directed production of the National Mortgage Settlement Servicing Standard Scorecard for executive review and submission to the Office of Mortgage Settlement Oversight.',
+          'Oversaw reporting and process development for the U.S. DOJ National Mortgage Settlement Program, enabling modification of $25B+ in loan balances.',
+          'Managed a team of 4 senior analysts and coordinated 8 operational managers across loan modification and complaint resolution programs.',
+          'Built and automated an enterprise-grade BI and data warehouse supporting marketing, production, modeling, forecasting, and operational decision-making across proprietary and government programs.',
+          'Analyzed portfolio trends across risk, losses, delinquency roll rates, payment shock, rate resets, and FICO vintage, alongside campaign effectiveness, and delivered the findings to executive leadership.',
+          'Led cross-functional work with finance, technology, marketing, legal, compliance, and executive management to optimize program performance and regulatory adherence.',
+          'Directed UAT, training, and deployment of loan modification and refinance tools across multiple business lines.',
         ],
       },
     ],
@@ -194,8 +206,18 @@ export const tenures: Tenure[] = [
       {
         title: 'Finance Manager, Bank Finance',
         team: 'Bank Finance',
+        dates: 'Aug 2003 – Aug 2010',
         achievements: [
-          'Spearheaded development of the loan database and analytics infrastructure, improving reporting, lead generation, and portfolio management across Finance, Credit, and Compliance.',
+          'Built and administered enterprise loan, sales, and marketing databases supporting Finance, Credit, Compliance, and senior leadership.',
+          'Led analytics infrastructure modernization, serving as subject matter expert for the MS Access to SQL Server migration.',
+          'Enhanced and managed loan pricing models, and executed pricing exception decisions using ROE, spreads, cost of funds, LTV, FICO, and credit history.',
+          'Produced executive-level reporting for the Board of Directors, ALCO, and the Credit Risk Management Committee.',
+          'Designed delinquency roll-rate, industry comparison, and portfolio vintage analytics to assess performance and risk trends.',
+          'Developed industry rate databases and analyses guiding Pricing Committee lending decisions.',
+          'Built marketing effectiveness analytics enabling strategic campaign decisions for the Chief Marketing Officer.',
+          'Created streamlined pricing exception processes, improving the speed and consistency of lending decisions.',
+          'Managed junior analysts to ensure accurate, timely reporting across Finance, Credit, Accounting, Marketing, Legal, and Compliance.',
+          'Coordinated regulatory reporting for the Office of Thrift Supervision and supported OCC annual review analytics.',
         ],
       },
     ],
