@@ -73,10 +73,10 @@ export const profile = {
   summary:
     'Senior engineering and analytics professional with 20+ years in data analytics, 6+ of them ' +
     'leading initiatives, across software licensing, mortgage and consumer lending, advertising, ' +
-    'supply chain, and freight. I engineer the scalable end — data modeling, transformation, ' +
+    'supply chain, and freight. I engineer scalable solutions — data modeling, transformation, ' +
     'warehousing, and ETL pipelines in SQL and Python — then build the dashboards and AI-driven ' +
-    'automation that sit on top of it, treating data quality and privacy as requirements rather than ' +
-    'afterthoughts. I do my best work in ambiguous 0-to-1 territory with minimal oversight.',
+    'automation that sit on top of them, treating data quality and privacy as requirements rather ' +
+    'than afterthoughts. I do my best work in ambiguous 0-to-1 territory with minimal oversight.',
 } as const;
 
 /** Headline numbers for the stat tiles. Every one is traceable to a role below. */
