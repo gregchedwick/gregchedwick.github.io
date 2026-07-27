@@ -19,14 +19,12 @@ import { profile } from '../data/resume';
       <p class="hero__summary">{profile.summary}</p>
 
       <div class="hero__actions">
-        <a class="btn btn--primary" href="#projects">See the work</a>
-        <a class="btn" href="#experience">Career history</a>
         {/*
-          Promoted out of the quiet contact row: on an analytics portfolio the
-          repositories are the evidence, so this deserves the same weight as the
-          other calls to action rather than sitting beside an email address.
+          Leads the row. On an analytics portfolio the repositories are the
+          evidence — a recruiter checking whether the claims hold up goes here
+          first, so this carries the primary weight rather than a section jump.
         */}
-        <a class="btn" href={profile.github}>
+        <a class="btn btn--primary" href={profile.github}>
           <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
             <path
               fill="currentColor"
@@ -35,6 +33,8 @@ import { profile } from '../data/resume';
           </svg>
           GitHub
         </a>
+        <a class="btn" href="#projects">See the work</a>
+        <a class="btn" href="#experience">Career history</a>
         {/* Built by scripts/build_resume_pdf.py — a redacted copy of the master. */}
         <a class="btn btn--quiet" href="/resume.pdf" download="Greg Chedwick - Resume.pdf">
           <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
