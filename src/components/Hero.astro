@@ -21,6 +21,20 @@ import { profile } from '../data/resume';
       <div class="hero__actions">
         <a class="btn btn--primary" href="#projects">See the work</a>
         <a class="btn" href="#experience">Career history</a>
+        {/* Built by scripts/build_resume_pdf.py — a redacted copy of the master. */}
+        <a class="btn btn--quiet" href="/resume.pdf" download="Greg Chedwick - Resume.pdf">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <path
+              d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.9"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          Résumé
+        </a>
       </div>
 
       <ul class="hero__links">
@@ -153,6 +167,14 @@ import { profile } from '../data/resume';
     border-color: var(--accent-hover);
     color: #fff;
   }
+
+  /* Third in a row of three — present without competing with the other two. */
+  .btn--quiet {
+    gap: var(--space-2xs);
+    border-color: var(--border);
+    color: var(--ink-secondary);
+  }
+  .btn--quiet:hover { color: var(--ink); }
 
   .hero__links {
     display: flex;
