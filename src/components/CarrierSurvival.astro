@@ -211,11 +211,26 @@ const stats = [
   }
 
   /* ---------- layout ---------- */
+  /* Panels stretch to a common height rather than each sizing to its own
+     content. The gains panel lists three bars against the fleet panel's five,
+     so with `align-items: start` the two boxes sat side by side at visibly
+     different heights and the shorter one read as unfinished. */
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
     gap: var(--space-lg);
-    align-items: start;
+  }
+
+  /* Push each panel's closing note to the bottom of the stretched box, so the
+     two panels line up along their feet as well as their frames. */
+  .grid .panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .grid .panel__foot {
+    margin-top: auto;
+    padding-top: var(--space-md);
   }
 
   .panel {
