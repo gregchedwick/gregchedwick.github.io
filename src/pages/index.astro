@@ -5,9 +5,22 @@ import ImpactMetrics from '../components/ImpactMetrics.astro';
 import CareerTimeline from '../components/CareerTimeline.astro';
 import SkillsMatrix from '../components/SkillsMatrix.astro';
 import Projects from '../components/Projects.astro';
+import ProjectCard from '../components/ProjectCard.astro';
 import CarrierSurvival from '../components/CarrierSurvival.astro';
 import NetflixDashboard from '../components/NetflixDashboard.astro';
 import Contact from '../components/Contact.astro';
+import { projects } from '../data/projects';
+
+/**
+ * Cards are composed here rather than mapped inside Projects.astro, because
+ * each carries different expanded content and Astro cannot pass per-iteration
+ * children through a `.map()`.
+ */
+const bySlug = (slug: string) => {
+  const project = projects.find((p) => p.slug === slug);
+  if (!project) throw new Error(`No project with slug "${slug}" in projects.ts`);
+  return project;
+};
 ---
 
 <Base>
@@ -15,8 +28,18 @@ import Contact from '../components/Contact.astro';
   <ImpactMetrics />
   <CareerTimeline />
   <SkillsMatrix />
-  <Projects />
-  <CarrierSurvival />
-  <NetflixDashboard />
+
+  <Projects>
+    <ProjectCard project={bySlug('carrier-survival')} expandable open>
+      <CarrierSurvival />
+    </ProjectCard>
+
+    <ProjectCard project={bySlug('netflix-ads-analytics')} expandable>
+      <NetflixDashboard />
+    </ProjectCard>
+
+    <ProjectCard project={bySlug('this-site')} />
+  </Projects>
+
   <Contact />
 </Base>

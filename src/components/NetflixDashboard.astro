@@ -36,11 +36,8 @@ const genreAxis = axisMax(topGenres.map((g) => g.avgScore));
 const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
 ---
 
-<section class="section netflix" id="netflix">
-  <div class="container">
-    <p class="section__label">Live project data</p>
-    <h2 class="section__title">Netflix Ad Opportunity Score</h2>
-    <p class="section__intro">
+<div class="netflix">
+    <p class="lede">
       Which titles are worth buying ad inventory against? I scored all {titleCount} titles in the
       2025–26 global top 500 by blending how much they were actually watched with how long they
       stayed relevant. These charts run on the real output of that analysis — not screenshots.
@@ -237,7 +234,7 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
     <strong class="tip__head" data-tip-head></strong>
     <span class="tip__body" data-tip-body></span>
   </div>
-</section>
+</div>
 
 <script>
   import titleData from '../data/netflix-ads.json';
@@ -612,18 +609,19 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
 
   /* ---------- panels ---------- */
 
-  /* The dashboard runs wider than the rest of the page — a chart grid needs the
-     room, and body copy elsewhere does not. */
-  .netflix > .container { max-width: 1360px; }
-
   /* Two thirds of the dashboard width: wider than the usual reading measure so
-     it carries across the columns, but short of the full 1360px, where the line
-     runs to ~150 characters and gets tiring to read. Full width below the
+     it carries across the columns, but short of full width, where the line runs
+     to ~150 characters and gets tiring to read. Full width below the
      breakpoint, where two thirds would leave it cramped. */
-  .netflix .section__intro { max-width: none; }
+  .lede {
+    margin: 0 0 var(--space-lg);
+    max-width: none;
+    color: var(--ink-secondary);
+    text-wrap: pretty;
+  }
 
   @media (min-width: 60rem) {
-    .netflix .section__intro { max-width: 66.67%; }
+    .lede { max-width: 66.67%; }
   }
 
   /* Single column while narrow; DOM order (filters, titles, genres, weights)

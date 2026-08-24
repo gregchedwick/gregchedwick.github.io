@@ -1,5 +1,13 @@
 ---
-import { projects } from '../data/projects';
+/**
+ * Section wrapper only. The cards are composed in index.astro so each can be
+ * handed its own expanded content as a slot — a `.map()` over the data cannot
+ * pass different children per project.
+ *
+ * Cards stack in a single column rather than a grid. An expanded card holds a
+ * full dashboard, and a dashboard squeezed into a half-width grid cell reads
+ * badly at every breakpoint that matters.
+ */
 ---
 
 <section class="section" id="projects">
@@ -8,170 +16,43 @@ import { projects } from '../data/projects';
     <h2 class="section__title">Projects</h2>
     <p class="section__intro">
       Things I build outside work to stay sharp on the tools. Each one ships end to end — data in,
-      decision out — rather than stopping at a notebook.
+      decision out — rather than stopping at a notebook. Open a card for the full analysis.
     </p>
 
-    <ul class="cards">
-      {
-        projects.map((project) => (
-          <li class="card">
-            <header class="card__head">
-              <h3 class="card__title">{project.title}</h3>
-              <span class="card__status" data-status={project.status}>
-                {project.status === 'live' ? 'Shipped' : 'In progress'}
-              </span>
-            </header>
-
-            <p class="card__blurb">{project.blurb}</p>
-
-            <ul class="card__highlights">
-              {project.highlights.map((point) => (
-                <li>{point}</li>
-              ))}
-            </ul>
-
-            <ul class="card__stack">
-              {project.stack.map((tech) => (
-                <li>{tech}</li>
-              ))}
-            </ul>
-
-            <footer class="card__foot">
-              {project.anchor && (
-                <a class="card__link card__link--primary" href={project.anchor}>
-                  Explore the data ↓
-                </a>
-              )}
-              {project.repo && (
-                <a class="card__link" href={project.repo}>
-                  Repository ↗
-                </a>
-              )}
-            </footer>
-          </li>
-        ))
-      }
-    </ul>
+    <div class="cards">
+      <slot />
+    </div>
   </div>
 </section>
 
+<script>
+  /**
+   * Open the card a link points at.
+   *
+   * Browsers auto-expand a <details> to reveal a fragment target *inside* it,
+   * but not when the id is on the element itself — which it must be here, since
+   * the card is the thing worth linking to. Eleven lines buys a shareable
+   * https://gregchedwick.dev/#carrier-survival that lands open rather than
+   * collapsed.
+   */
+  const openTarget = () => {
+    const id = decodeURIComponent(location.hash.slice(1));
+    if (!id) return;
+    const card = document.getElementById(id);
+    if (card instanceof HTMLDetailsElement && !card.open) {
+      card.open = true;
+      card.scrollIntoView({ block: 'start' });
+    }
+  };
+
+  openTarget();
+  window.addEventListener('hashchange', openTarget);
+</script>
+
 <style>
   .cards {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
-    gap: var(--space-md);
-  }
-
-  .card {
     display: flex;
     flex-direction: column;
-    padding: var(--space-lg);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    transition: border-color 0.15s ease, transform 0.15s ease;
-  }
-  .card:hover {
-    border-color: var(--border-strong);
-    transform: translateY(-2px);
-  }
-
-  .card__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-sm);
-  }
-
-  .card__title {
-    font-size: var(--step-1);
-    font-weight: 620;
-  }
-
-  .card__status {
-    flex: 0 0 auto;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    padding: 0.2rem 0.5rem;
-    border-radius: 100px;
-    border: 1px solid var(--border);
-    color: var(--ink-muted);
-  }
-  .card__status[data-status='live'] {
-    color: var(--success);
-    border-color: color-mix(in srgb, var(--success) 35%, transparent);
-  }
-
-  .card__blurb {
-    color: var(--ink-secondary);
-    margin-bottom: var(--space-md);
-  }
-
-  .card__highlights {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 var(--space-md);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-    font-size: var(--step--1);
-    color: var(--ink-secondary);
-  }
-
-  .card__highlights li {
-    position: relative;
-    padding-left: var(--space-md);
-    line-height: 1.5;
-  }
-  .card__highlights li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.62em;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--accent);
-    opacity: 0.55;
-  }
-
-  .card__stack {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 var(--space-lg);
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2xs);
-  }
-
-  .card__stack li {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    padding: 0.18rem 0.45rem;
-    border-radius: var(--radius-sm);
-    background: var(--gridline);
-    color: var(--ink-secondary);
-  }
-
-  .card__foot {
-    margin-top: auto;
-    display: flex;
-    flex-wrap: wrap;
     gap: var(--space-md);
-    font-size: var(--step--1);
   }
-
-  .card__link {
-    text-decoration: none;
-    color: var(--ink-secondary);
-    font-weight: 550;
-  }
-  .card__link:hover { color: var(--accent); }
-  .card__link--primary { color: var(--accent); }
 </style>

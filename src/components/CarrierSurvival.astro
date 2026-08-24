@@ -31,11 +31,8 @@ const stats = [
 ];
 ---
 
-<section class="section carrier" id="carrier-survival">
-  <div class="container">
-    <p class="section__label">Live project data</p>
-    <h2 class="section__title">Carrier Survival Model</h2>
-    <p class="section__intro">
+<div class="carrier">
+    <p class="lede">
       Will a trucking carrier still be operating a year from now? Brokers, insurers and lessors all
       carry exposure to carriers that may not exist at renewal, and every public tool is
       backward-looking. This model scores {fmtM(carriers)} carriers from public FMCSA records. The
@@ -151,13 +148,21 @@ const stats = [
 
       <a class="repo-link" href={repo}>Read the full write-up and code ↗</a>
     </figure>
-  </div>
-</section>
+</div>
 
 <style>
+  /* Sits inside an expanded project card, so it paints no ground of its own —
+     the card already provides surface, border and padding. */
   .carrier {
-    background: var(--surface);
-    border-block: 1px solid var(--border);
+    position: relative;
+  }
+
+  /* Was the section intro. The card supplies the heading above it. */
+  .lede {
+    margin: 0;
+    max-width: 68ch;
+    color: var(--ink-secondary);
+    text-wrap: pretty;
   }
 
   /* ---------- stat tiles ---------- */
@@ -167,7 +172,7 @@ const stats = [
     gap: var(--space-md);
     list-style: none;
     padding: 0;
-    margin: var(--space-xl) 0 var(--space-lg);
+    margin: var(--space-lg) 0;
   }
 
   .stat {

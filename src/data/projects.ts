@@ -6,8 +6,6 @@ export interface Project {
   role: string;
   stack: string[];
   repo?: string;
-  /** Set when the project has a live interactive section on this page */
-  anchor?: string;
   highlights: string[];
   status: 'live' | 'in-progress';
 }
@@ -23,7 +21,6 @@ export const projects: Project[] = [
     role: 'Problem framing, data forensics, feature engineering, modelling, validation',
     stack: ['Python', 'scikit-learn', 'Pandas', 'Parquet', 'pytest', 'Survival analysis'],
     repo: 'https://github.com/gregchedwick/carrier-survival',
-    anchor: '#carrier-survival',
     status: 'live',
     highlights: [
       'Discriminates at 0.889 AUC across 1.9M carriers — reviewing the riskiest 10% surfaces 58% of all failures',
@@ -40,7 +37,6 @@ export const projects: Project[] = [
     role: 'Data ingestion through to a scored, ranked, decision-ready output',
     stack: ['Python', 'Pandas', 'Matplotlib', 'Jupyter', 'Power BI', 'Git'],
     repo: 'https://github.com/gregchedwick/Netflix-Ads-Analytics',
-    anchor: '#netflix',
     status: 'live',
     highlights: [
       'Cleaned and merged 32,000+ Netflix titles with 2025–26 global top-500 viewership data',
