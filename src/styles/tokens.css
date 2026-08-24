@@ -73,7 +73,11 @@
   --radius-lg: 14px;
 
   --measure:   68ch;
-  --container: 1120px;
+  /* Wide enough to use most of a laptop canvas — the dashboards are grids and
+     were being squeezed into two thirds of the screen while the margins sat
+     empty. Prose is still held to --measure separately, so widening the shell
+     does not stretch any line of body copy. */
+  --container: 1400px;
 }
 
 /* Dark values, declared under both scopes: the media query follows the OS,

@@ -27,7 +27,15 @@ import { projects } from '../data/projects';
       decision out — rather than stopping at a notebook. Pick a card for the full analysis.
     </p>
 
-    <div class="deck" role="tablist" aria-label="Projects" data-deck>
+    <div class="deck-wrap">
+      <button class="deck-nav deck-nav--prev" type="button" data-scroll="-1" aria-label="Scroll to previous projects">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.25"
+                stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+
+      <div class="deck" role="tablist" aria-label="Projects" data-deck>
       {
         projects.map((project, index) => (
           <button
@@ -65,13 +73,17 @@ import { projects } from '../data/projects';
               ))}
             </span>
           </button>
-        ))
-      }
-    </div>
+          ))
+        }
+      </div>
 
-    <p class="deck__hint">
-      <span aria-hidden="true">←→</span> Scroll the row or use arrow keys to compare projects
-    </p>
+      <button class="deck-nav deck-nav--next" type="button" data-scroll="1" aria-label="Scroll to more projects">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.25"
+                stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+    </div>
 
     <div class="panes">
       <slot />
@@ -132,6 +144,42 @@ import { projects } from '../data/projects';
       select(tabs[next].dataset.slug!, { focus: true, scroll: true, hash: true });
     });
 
+    // --- horizontal scroll buttons -------------------------------------
+    //
+    // These move the row; they do not change the selection. Scrolling to look
+    // at a card and choosing it are different intentions, and collapsing them
+    // would make browsing overwrite the pane on every click.
+    const scrollers = [...document.querySelectorAll<HTMLButtonElement>('[data-scroll]')];
+
+    const syncScrollers = () => {
+      const max = deck.scrollWidth - deck.clientWidth;
+      // A 2px slack: sub-pixel layout leaves scrollLeft a hair short of max on
+      // fractional zoom levels, which would leave the button live at the end.
+      scrollers.forEach((button) => {
+        const forward = Number(button.dataset.scroll) > 0;
+        const atEnd = forward ? deck.scrollLeft >= max - 2 : deck.scrollLeft <= 2;
+        button.disabled = max <= 0 || atEnd;
+      });
+    };
+
+    scrollers.forEach((button) => {
+      button.addEventListener('click', () => {
+        const card = deck.querySelector<HTMLElement>('[role="tab"]');
+        // One card plus the gap, so a click always lands on a card edge.
+        // Guard on the measurement rather than the element: a card that exists
+        // but reports zero width (measured before layout, or inside a hidden
+        // ancestor) would otherwise scroll by the 16px gap alone and read as a
+        // dead button.
+        const width = card?.offsetWidth ?? 0;
+        const step = width > 0 ? width + 16 : deck.clientWidth * 0.8;
+        deck.scrollBy({ left: step * Number(button.dataset.scroll), behavior: 'smooth' });
+      });
+    });
+
+    deck.addEventListener('scroll', syncScrollers, { passive: true });
+    window.addEventListener('resize', syncScrollers);
+    syncScrollers();
+
     // A link to a project should land on that project.
     const fromHash = decodeURIComponent(location.hash.slice(1));
     const initial = tabs.some((t) => t.dataset.slug === fromHash) ? fromHash : tabs[0].dataset.slug!;
@@ -146,6 +194,53 @@ import { projects } from '../data/projects';
 
 <style>
   /* ---------- the card row ---------- */
+  .deck-wrap {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-lg);
+  }
+
+  /* Large enough to read as a control rather than a decoration — the row is
+     scrollable and nothing else on the page says so. */
+  .deck-nav {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    color: var(--ink-secondary);
+    background: var(--surface-raised);
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .deck-nav svg {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .deck-nav:hover:not(:disabled) {
+    color: var(--surface-raised);
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .deck-nav:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Kept in place rather than hidden: a control that vanishes at the end of the
+     row makes the row jump sideways as you scroll. */
+  .deck-nav:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
   .deck {
     display: flex;
     gap: var(--space-md);
@@ -296,12 +391,6 @@ import { projects } from '../data/projects';
     border-radius: var(--radius-sm);
     background: var(--gridline);
     color: var(--ink-secondary);
-  }
-
-  .deck__hint {
-    margin: 0 0 var(--space-lg);
-    font-size: var(--step--1);
-    color: var(--ink-muted);
   }
 
   /* ---------- the detail pane ---------- */

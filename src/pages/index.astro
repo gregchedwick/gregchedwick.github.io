@@ -39,8 +39,66 @@ const bySlug = (slug: string) => {
       <NetflixDashboard />
     </ProjectPane>
 
-    <ProjectPane project={bySlug('this-site')} />
+    {/* No dashboard to show, so the pane carries the build notes instead —
+        repeating the card's own summary back at the reader would be worse than
+        showing nothing. */}
+    <ProjectPane project={bySlug('this-site')}>
+      <div class="site-notes">
+        <p>
+          Every figure on this page renders from typed data, not markup. The career history, the
+          impact metrics and both dashboards read from files under <code>src/data/</code>, so
+          correcting a job title or a model score is a one-line edit rather than a hunt through
+          templates.
+        </p>
+        <p>
+          The charts are hand-rolled SVG and CSS. A charting library would have added tens of
+          kilobytes of JavaScript to draw rectangles that are already a known size at build time,
+          and would have made the colour and contrast decisions harder to control rather than
+          easier.
+        </p>
+        <p>
+          Colours are checked for contrast and for colour-vision deficiency separation in both light
+          and dark themes; animation is decoration that <code>prefers-reduced-motion</code> turns
+          off, never the only way to read something. The whole site is static, built and deployed by
+          GitHub Actions on every push.
+        </p>
+      </div>
+    </ProjectPane>
   </ProjectDeck>
 
   <Contact />
 </Base>
+
+<style>
+  /* Same two-column treatment as the other wide prose blocks: fill the pane
+     rather than leave half of it empty and double its height. */
+  .site-notes {
+    columns: 2;
+    column-gap: var(--space-xl);
+    color: var(--ink-secondary);
+    text-wrap: pretty;
+  }
+
+  .site-notes p {
+    margin: 0 0 var(--space-md);
+    break-inside: avoid;
+  }
+
+  .site-notes p:last-child {
+    margin-bottom: 0;
+  }
+
+  .site-notes code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    padding: 0.1em 0.3em;
+    border-radius: var(--radius-sm);
+    background: var(--gridline);
+  }
+
+  @media (max-width: 48rem) {
+    .site-notes {
+      columns: 1;
+    }
+  }
+</style>
