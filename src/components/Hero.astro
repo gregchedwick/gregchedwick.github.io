@@ -130,17 +130,25 @@ import { profile } from '../data/resume';
     margin-bottom: var(--space-sm);
   }
 
+  /* 97 characters. At 34ch it broke to three lines and left the column half
+     empty beside the portrait; ~52ch lands it on two. */
   .hero__tagline {
     font-size: var(--step-1);
     color: var(--ink);
-    max-width: 34ch;
+    max-width: 52ch;
     margin-bottom: var(--space-md);
     font-weight: 500;
   }
 
+  /* 548 characters. The usual --measure (68ch) ran it to seven lines and left
+     the same dead space. ~108ch brings it to five.
+     Deliberately past the comfortable reading measure: this is three sentences
+     read once at the top of a page, not body copy, and the alternative is a
+     column of text with an empty half beside it. Everything below the hero is
+     still held to --measure. */
   .hero__summary {
     color: var(--ink-secondary);
-    max-width: var(--measure);
+    max-width: 108ch;
     margin-bottom: var(--space-lg);
   }
 
@@ -230,8 +238,32 @@ import { profile } from '../data/resume';
     .hero__inner {
       flex-direction: row;
       align-items: center;
-      gap: var(--space-2xl);
+      gap: var(--space-xl);
     }
-    .hero__portrait { width: 20rem; }
+
+    /* Capped rather than growing to fill. The text stops where it stops, and
+       the portrait centres itself in whatever is left instead of being pushed
+       flush against the right edge with a gap in the middle. */
+    .hero__body { flex: 0 1 56rem; }
+
+    /* One governing width above this breakpoint. Two competing caps — the
+       column and the text measure — made the line count depend on whichever
+       happened to be smaller, which is a fiddly thing to reason about; the
+       56rem column is now the only constraint, landing the summary on five
+       lines and the tagline on two. Below 60rem --measure still applies. */
+    .hero__summary { max-width: none; }
+
+    .hero__portrait {
+      flex: 1 1 auto;
+      width: auto;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* The frame is fixed here because the container is now flexible — at
+       width: 100% the portrait would stretch to fill the leftover space. */
+    .hero__portrait :global(img) {
+      width: min(20rem, 100%);
+    }
   }
 </style>
