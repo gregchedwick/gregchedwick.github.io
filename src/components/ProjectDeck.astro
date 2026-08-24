@@ -1,0 +1,280 @@
+---
+import { projects } from '../data/projects';
+
+/**
+ * A row of small cards over one detail pane.
+ *
+ * The page length no longer grows with the portfolio: a new project adds one
+ * card to a horizontally scrolling row, not another screen of dashboard.
+ *
+ * Implemented as the WAI-ARIA tabs pattern rather than as buttons that toggle
+ * `hidden`. Cards are `role="tab"`, panes are `role="tabpanel"`, and arrow keys
+ * move between them — which is what a screen reader and a keyboard user expect
+ * from "pick one of these, see its detail". Getting that for the price of a few
+ * attributes is worth more than saving the attributes.
+ *
+ * Without JavaScript every pane renders visible, so the content is all still
+ * there — long, but never lost.
+ */
+---
+
+<section class="section" id="projects">
+  <div class="container">
+    <p class="section__label">Nights &amp; weekends</p>
+    <h2 class="section__title">Projects</h2>
+    <p class="section__intro">
+      Things I build outside work to stay sharp on the tools. Each one ships end to end — data in,
+      decision out — rather than stopping at a notebook. Pick a card for the full analysis.
+    </p>
+
+    <div class="deck" role="tablist" aria-label="Projects" data-deck>
+      {
+        projects.map((project, index) => (
+          <button
+            class="mini"
+            role="tab"
+            type="button"
+            id={`tab-${project.slug}`}
+            aria-controls={`pane-${project.slug}`}
+            aria-selected={index === 0 ? 'true' : 'false'}
+            tabindex={index === 0 ? 0 : -1}
+            data-slug={project.slug}
+          >
+            <span class="mini__status" data-status={project.status}>
+              {project.status === 'live' ? 'Shipped' : 'In progress'}
+            </span>
+
+            <span class="mini__title">{project.title}</span>
+
+            <span class="mini__metric">
+              <span class="mini__value">{project.metric.value}</span>
+              <span class="mini__label">{project.metric.label}</span>
+            </span>
+
+            <span class="mini__stack">
+              {project.stack.slice(0, 3).map((tech) => (
+                <span>{tech}</span>
+              ))}
+            </span>
+          </button>
+        ))
+      }
+    </div>
+
+    <p class="deck__hint">
+      <span aria-hidden="true">←→</span> Scroll or use arrow keys to compare projects
+    </p>
+
+    <div class="panes">
+      <slot />
+    </div>
+  </div>
+</section>
+
+<script>
+  /**
+   * Tab controller.
+   *
+   * Panes render visible so the page works without JavaScript; the first thing
+   * this does is hide all but the selected one. Doing it the other way round —
+   * markup hidden, revealed by script — loses every pane when the script fails.
+   */
+  const deck = document.querySelector<HTMLElement>('[data-deck]');
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+  const panes = [...document.querySelectorAll<HTMLElement>('[role="tabpanel"]')];
+
+  if (deck && tabs.length && panes.length) {
+    type Options = { focus?: boolean; scroll?: boolean; hash?: boolean };
+
+    const select = (slug: string, { focus = false, scroll = false, hash = false }: Options = {}) => {
+      tabs.forEach((tab) => {
+        const on = tab.dataset.slug === slug;
+        tab.setAttribute('aria-selected', String(on));
+        tab.tabIndex = on ? 0 : -1;
+        if (on && focus) tab.focus();
+        // Keep the chosen card in view when arrow keys walk past the edge of the
+        // scroller — but never on the initial call. The deck sits below the
+        // fold, so scrolling it into view on load would drag the visitor past
+        // the hero before they had read it.
+        if (on && scroll) tab.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+      });
+      panes.forEach((pane) => {
+        pane.hidden = pane.dataset.slug !== slug;
+      });
+      // Only once the visitor has chosen. Rewriting the URL on load would make
+      // the back button undo a navigation they never made.
+      if (hash) history.replaceState(null, '', `#${slug}`);
+    };
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => select(tab.dataset.slug!, { scroll: true, hash: true }));
+    });
+
+    deck.addEventListener('keydown', (event) => {
+      const step = { ArrowRight: 1, ArrowLeft: -1, Home: -Infinity, End: Infinity }[event.key];
+      if (step === undefined) return;
+      event.preventDefault();
+      const current = tabs.findIndex((t) => t.getAttribute('aria-selected') === 'true');
+      const next =
+        step === -Infinity
+          ? 0
+          : step === Infinity
+            ? tabs.length - 1
+            : (current + step + tabs.length) % tabs.length;
+      select(tabs[next].dataset.slug!, { focus: true, scroll: true, hash: true });
+    });
+
+    // A link to a project should land on that project.
+    const fromHash = decodeURIComponent(location.hash.slice(1));
+    const initial = tabs.some((t) => t.dataset.slug === fromHash) ? fromHash : tabs[0].dataset.slug!;
+    // No scroll and no history rewrite on the first pass — see select().
+    select(initial);
+    window.addEventListener('hashchange', () => {
+      const slug = decodeURIComponent(location.hash.slice(1));
+      if (tabs.some((t) => t.dataset.slug === slug)) select(slug, { scroll: true });
+    });
+  }
+</script>
+
+<style>
+  /* ---------- the card row ---------- */
+  .deck {
+    display: flex;
+    gap: var(--space-md);
+    overflow-x: auto;
+    padding: var(--space-2xs) var(--space-2xs) var(--space-md);
+    scroll-snap-type: x proximity;
+    /* Firefox; WebKit uses the ::-webkit-scrollbar rules below. */
+    scrollbar-width: thin;
+    scrollbar-color: var(--baseline) transparent;
+  }
+
+  .deck::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .deck::-webkit-scrollbar-thumb {
+    background: var(--baseline);
+    border-radius: 100px;
+  }
+
+  .deck::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* ---------- one card ---------- */
+  .mini {
+    flex: 0 0 15rem;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding: var(--space-md);
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .mini:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+  }
+
+  .mini:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* The selected card reads as the source of the pane below it. */
+  .mini[aria-selected='true'] {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+    background: var(--surface-raised);
+  }
+
+  .mini__status {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.4rem;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    color: var(--ink-muted);
+  }
+
+  .mini__status[data-status='live'] {
+    color: var(--success);
+    border-color: color-mix(in srgb, var(--success) 35%, transparent);
+  }
+
+  .mini__title {
+    font-size: var(--step-0);
+    font-weight: 620;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  .mini__metric {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+    padding-top: var(--space-xs);
+  }
+
+  .mini__value {
+    font-family: var(--font-mono);
+    font-size: var(--step-2);
+    font-weight: 600;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .mini__label {
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+
+  .mini__stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+    padding-top: var(--space-2xs);
+  }
+
+  .mini__stack span {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    padding: 0.14rem 0.38rem;
+    border-radius: var(--radius-sm);
+    background: var(--gridline);
+    color: var(--ink-secondary);
+  }
+
+  .deck__hint {
+    margin: 0 0 var(--space-lg);
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+
+  /* ---------- the detail pane ---------- */
+  .panes {
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-lg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mini {
+      transition: none;
+    }
+    .mini:hover {
+      transform: none;
+    }
+  }
+</style>

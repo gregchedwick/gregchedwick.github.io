@@ -1,0 +1,115 @@
+---
+import type { Project } from '../data/projects';
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+const hasDetail = Astro.slots.has('default');
+---
+
+<div
+  class="pane"
+  role="tabpanel"
+  id={`pane-${project.slug}`}
+  aria-labelledby={`tab-${project.slug}`}
+  data-slug={project.slug}
+  tabindex="0"
+>
+  <header class="pane__head">
+    <h3 class="pane__title">{project.title}</h3>
+    <p class="pane__role">{project.role}</p>
+  </header>
+
+  {!hasDetail && <p class="pane__blurb">{project.blurb}</p>}
+
+  <ul class="pane__highlights">
+    {project.highlights.map((point) => <li>{point}</li>)}
+  </ul>
+
+  <slot />
+
+  {
+    project.repo && (
+      <a class="pane__repo" href={project.repo}>
+        Repository ↗
+      </a>
+    )
+  }
+</div>
+
+<style>
+  .pane__head {
+    margin-bottom: var(--space-md);
+  }
+
+  .pane__title {
+    margin: 0;
+    font-size: var(--step-2);
+    line-height: 1.2;
+  }
+
+  .pane__role {
+    margin: var(--space-2xs) 0 0;
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+
+  .pane__blurb {
+    margin: 0 0 var(--space-md);
+    max-width: 68ch;
+    color: var(--ink-secondary);
+    text-wrap: pretty;
+  }
+
+  .pane__highlights {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    max-width: 78ch;
+    font-size: var(--step--1);
+    color: var(--ink-secondary);
+  }
+
+  .pane__highlights li {
+    position: relative;
+    padding-left: var(--space-md);
+    line-height: 1.5;
+  }
+
+  .pane__highlights li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.55;
+  }
+
+  .pane__repo {
+    display: inline-block;
+    margin-top: var(--space-lg);
+    font-weight: 600;
+    font-size: var(--step--1);
+    color: var(--accent);
+  }
+
+  .pane__repo:hover {
+    color: var(--accent-hover);
+  }
+
+  /* Focus lands here after a tab is chosen; the ring would otherwise draw a box
+     round a whole dashboard. */
+  .pane:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 6px;
+    border-radius: var(--radius);
+  }
+</style>

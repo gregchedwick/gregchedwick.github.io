@@ -6,6 +6,8 @@ export interface Project {
   role: string;
   stack: string[];
   repo?: string;
+  /** The one figure the card leads with, baseball-card style. */
+  metric: { value: string; label: string };
   highlights: string[];
   status: 'live' | 'in-progress';
 }
@@ -21,6 +23,7 @@ export const projects: Project[] = [
     role: 'Problem framing, data forensics, feature engineering, modelling, validation',
     stack: ['Python', 'scikit-learn', 'Pandas', 'Parquet', 'pytest', 'Survival analysis'],
     repo: 'https://github.com/gregchedwick/carrier-survival',
+    metric: { value: '6.7x', label: 'lift over base rate' },
     status: 'live',
     highlights: [
       'Discriminates at 0.889 AUC across 1.9M carriers — reviewing the riskiest 10% surfaces 58% of all failures',
@@ -37,6 +40,7 @@ export const projects: Project[] = [
     role: 'Data ingestion through to a scored, ranked, decision-ready output',
     stack: ['Python', 'Pandas', 'Matplotlib', 'Jupyter', 'Power BI', 'Git'],
     repo: 'https://github.com/gregchedwick/Netflix-Ads-Analytics',
+    metric: { value: '32k', label: 'titles scored' },
     status: 'live',
     highlights: [
       'Cleaned and merged 32,000+ Netflix titles with 2025–26 global top-500 viewership data',
@@ -53,6 +57,7 @@ export const projects: Project[] = [
     role: 'Design, build, and deployment',
     stack: ['Astro', 'TypeScript', 'SVG', 'GitHub Actions'],
     repo: 'https://github.com/gregchedwick/gregchedwick.github.io',
+    metric: { value: '0 kb', label: 'chart libraries' },
     status: 'live',
     highlights: [
       'Career history and impact metrics render from a single typed data file',
