@@ -14,6 +14,24 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    slug: 'carrier-survival',
+    title: 'Carrier Survival Model',
+    blurb:
+      'A predictive model that estimates whether a trucking carrier will still be operating twelve ' +
+      'months from now, built from public FMCSA data. Brokers and insurers can check whether ' +
+      'authority is active today; nothing tells them the odds it lasts the length of a contract.',
+    role: 'Problem framing, data forensics, feature engineering, modelling, validation',
+    stack: ['Python', 'scikit-learn', 'Pandas', 'Parquet', 'pytest', 'Survival analysis'],
+    repo: 'https://github.com/gregchedwick/carrier-survival',
+    anchor: '#carrier-survival',
+    status: 'live',
+    highlights: [
+      'Discriminates at 0.889 AUC across 1.9M carriers — reviewing the riskiest 10% surfaces 58% of all failures',
+      'Well calibrated (ECE 0.0008), so predicted risk is usable for pricing and not only for triage',
+      'Thirteen silent data defects found and each fitted with an automated guardrail and regression test',
+    ],
+  },
+  {
     slug: 'netflix-ads-analytics',
     title: 'Netflix Ads Analytics',
     blurb:

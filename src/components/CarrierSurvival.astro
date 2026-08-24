@@ -1,0 +1,350 @@
+---
+import data from '../data/carrier-survival.json';
+
+const { carriers, rows, features, baseRate, auc, baselineAuc, lift, ece, gains, segments, repo } =
+  data;
+
+const fmtInt = (n: number) => Math.round(n).toLocaleString('en-US');
+const fmtM = (n: number) => `${(n / 1_000_000).toFixed(1)}M`;
+const pct = (n: number, digits = 0) =>
+  `${(n * 100).toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })}%`;
+
+/**
+ * The gains chart is the one worth leading with.
+ *
+ * AUC is the number a modeller reaches for and the number a broker cannot act
+ * on. "Review the riskiest 10% of your book and you catch 58% of the failures"
+ * is the same model stated as a decision, and it needs no explanation of what
+ * an ROC curve is.
+ *
+ * Both charts are scaled against a true 0-100% axis rather than against their
+ * own maximum, because the interesting comparison is with the diagonal — review
+ * 10%, catch 10% — not with each other.
+ */
+const headline = gains.find((g) => g.reviewed === 10) ?? gains[0];
+
+const stats = [
+  { value: auc.toFixed(3), label: 'AUC', note: `against ${baselineAuc.toFixed(3)} for a two-column baseline` },
+  { value: `${lift.toFixed(1)}x`, label: 'Lift', note: `over a ${pct(baseRate, 1)} base rate` },
+  { value: fmtM(carriers), label: 'Carriers', note: `${fmtM(rows)} carrier-months, ${features} features` },
+  { value: ece.toFixed(4), label: 'Calibration error', note: 'predicted risk tracks reality to ~0.08pp' },
+];
+---
+
+<section class="section carrier" id="carrier-survival">
+  <div class="container">
+    <p class="section__label">Live project data</p>
+    <h2 class="section__title">Carrier Survival Model</h2>
+    <p class="section__intro">
+      Will a trucking carrier still be operating a year from now? Brokers, insurers and lessors all
+      carry exposure to carriers that may not exist at renewal, and every public tool is
+      backward-looking. This model scores {fmtM(carriers)} carriers from public FMCSA records. The
+      figures below are the real evaluation output, not illustrations.
+    </p>
+
+    <ul class="stats">
+      {
+        stats.map((s) => (
+          <li class="stat">
+            <span class="stat__value">{s.value}</span>
+            <span class="stat__label">{s.label}</span>
+            <span class="stat__note">{s.note}</span>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="grid">
+      <!-- ---------- cumulative gains ---------- -->
+      <figure class="panel">
+        <figcaption class="panel__head">
+          <h3 class="panel__title">What a review queue actually buys</h3>
+          <p class="panel__note">
+            Share of all failures caught when carriers are reviewed highest-risk first.
+          </p>
+        </figcaption>
+
+        <ol class="bars">
+          {
+            gains.map((g) => (
+              <li class="bar-row">
+                <span class="bar-row__head">
+                  <span class="bar-row__title">Review riskiest {g.reviewed}%</span>
+                  <span class="bar-row__value">{pct(g.captured)} caught</span>
+                </span>
+                <span class="bar-row__track">
+                  <span class="bar-row__bar" style={`--pct:${g.captured * 100}%`} />
+                  <span class="bar-row__mark" style={`--at:${g.reviewed}%`} />
+                </span>
+                <span class="bar-row__meta">
+                  {(g.captured / (g.reviewed / 100)).toFixed(1)}x better than reviewing at random
+                </span>
+              </li>
+            ))
+          }
+        </ol>
+
+        <p class="panel__foot">
+          The thin rule on each bar marks where random selection would land. Reviewing one carrier
+          in ten surfaces {pct(headline.captured)} of everything that fails in the following year.
+        </p>
+      </figure>
+
+      <!-- ---------- discrimination by fleet size ---------- -->
+      <figure class="panel">
+        <figcaption class="panel__head">
+          <h3 class="panel__title">Holds across fleet sizes</h3>
+          <p class="panel__note">AUC by power units. 0.5 is a coin flip.</p>
+        </figcaption>
+
+        <ol class="bars">
+          {
+            segments.map((s) => (
+              <li class="bar-row">
+                <span class="bar-row__head">
+                  <span class="bar-row__title">{s.band} units</span>
+                  <span class="bar-row__value">{s.auc.toFixed(3)}</span>
+                </span>
+                <span class="bar-row__track">
+                  <span class="bar-row__bar bar-row__bar--alt" style={`--pct:${s.auc * 100}%`} />
+                  <span class="bar-row__mark" style="--at:50%" />
+                </span>
+              </li>
+            ))
+          }
+        </ol>
+
+        <p class="panel__foot">
+          Small carriers are most of the population, so they are segmented at evaluation rather than
+          filtered out of training — dropping them would move the base rate, not improve the model.
+        </p>
+      </figure>
+    </div>
+
+    <!-- ---------- the judgment call ---------- -->
+    <figure class="panel panel--wide">
+      <figcaption class="panel__head">
+        <h3 class="panel__title">The hard part was the label, not the model</h3>
+      </figcaption>
+
+      <p class="prose">
+        The obvious target — “did FMCSA revoke this carrier’s authority?” — is wrong, and the data
+        says so plainly. Of the revocation proceedings on record, <strong>2,208,586 were
+        discontinued against 1,600,771 executed</strong>. Most begin with a lapsed insurance filing;
+        the carrier files a new policy and keeps trading. Training on “a revocation happened” means
+        training mostly on carriers having a bad month.
+      </p>
+      <p class="prose">
+        Exit is therefore defined as a revocation with no reinstatement in the following twelve
+        months, with voluntary surrender separated out as a competing risk. Features freeze at month
+        zero and the outcome is measured over months 6–18 — a deliberate blackout, because insurance
+        lapse triggers revocation about a month later and a near-term model would just rediscover
+        FMCSA’s own paperwork instead of finding signal ahead of it.
+      </p>
+      <p class="prose">
+        Thirteen silent data defects turned up along the way — a grand total read as a fleet size, a
+        monthly export that was three files rather than one, a date format that quietly nulled an
+        entire vintage. Each now has an automated guardrail and a regression test. That catalogue is
+        written up in full in the repository, including the two defects that were in the
+        leak-detection code itself.
+      </p>
+
+      <a class="repo-link" href={repo}>Read the full write-up and code ↗</a>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .carrier {
+    background: var(--surface);
+    border-block: 1px solid var(--border);
+  }
+
+  /* ---------- stat tiles ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: var(--space-md);
+    list-style: none;
+    padding: 0;
+    margin: var(--space-xl) 0 var(--space-lg);
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+    padding: var(--space-md);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .stat__value {
+    font-family: var(--font-mono);
+    font-size: var(--step-2);
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--accent);
+  }
+
+  .stat__label {
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-secondary);
+  }
+
+  .stat__note {
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    text-wrap: pretty;
+  }
+
+  /* ---------- layout ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+    gap: var(--space-lg);
+    align-items: start;
+  }
+
+  .panel {
+    margin: 0;
+    padding: var(--space-lg);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .panel--wide {
+    margin-top: var(--space-lg);
+  }
+
+  .panel__head {
+    margin-bottom: var(--space-md);
+  }
+
+  .panel__title {
+    margin: 0;
+    font-size: var(--step-1);
+    line-height: 1.25;
+  }
+
+  .panel__note {
+    margin: var(--space-2xs) 0 0;
+    font-size: var(--step--1);
+    color: var(--ink-secondary);
+    text-wrap: pretty;
+  }
+
+  .panel__foot {
+    margin: var(--space-md) 0 0;
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    text-wrap: pretty;
+  }
+
+  /* ---------- bars ---------- */
+  .bars {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .bar-row__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-sm);
+    font-size: var(--step--1);
+  }
+
+  .bar-row__title {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .bar-row__value {
+    font-family: var(--font-mono);
+    color: var(--ink-secondary);
+    white-space: nowrap;
+  }
+
+  .bar-row__track {
+    position: relative;
+    display: block;
+    height: 0.6rem;
+    margin-top: var(--space-2xs);
+    background: var(--gridline);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .bar-row__bar {
+    display: block;
+    height: 100%;
+    width: var(--pct);
+    min-width: 3px;
+    background: var(--series-1);
+    border-radius: 0 4px 4px 0;
+    animation: bar-grow 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    transform-origin: left center;
+  }
+
+  .bar-row__bar--alt {
+    background: var(--series-2);
+  }
+
+  /* Reference rule: where random selection lands (gains) or a coin flip (AUC). */
+  .bar-row__mark {
+    position: absolute;
+    inset-block: 0;
+    left: var(--at);
+    width: 2px;
+    background: var(--ink);
+    opacity: 0.45;
+  }
+
+  .bar-row__meta {
+    display: block;
+    margin-top: var(--space-2xs);
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+
+  @keyframes bar-grow {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  /* ---------- prose ---------- */
+  .prose {
+    margin: 0 0 var(--space-md);
+    max-width: 68ch;
+    color: var(--ink-secondary);
+    text-wrap: pretty;
+  }
+
+  .repo-link {
+    display: inline-block;
+    margin-top: var(--space-xs);
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .repo-link:hover {
+    color: var(--accent-hover);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bar-row__bar {
+      animation: none;
+    }
+  }
+</style>
