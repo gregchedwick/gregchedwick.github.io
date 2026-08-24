@@ -124,27 +124,30 @@ const stats = [
         <h3 class="panel__title">The hard part was the label, not the model</h3>
       </figcaption>
 
-      <p class="prose">
+      <div class="prose">
+
+        <p>
         The obvious target — “did FMCSA revoke this carrier’s authority?” — is wrong, and the data
         says so plainly. Of the revocation proceedings on record, <strong>2,208,586 were
         discontinued against 1,600,771 executed</strong>. Most begin with a lapsed insurance filing;
         the carrier files a new policy and keeps trading. Training on “a revocation happened” means
         training mostly on carriers having a bad month.
       </p>
-      <p class="prose">
+        <p>
         Exit is therefore defined as a revocation with no reinstatement in the following twelve
         months, with voluntary surrender separated out as a competing risk. Features freeze at month
         zero and the outcome is measured over months 6–18 — a deliberate blackout, because insurance
         lapse triggers revocation about a month later and a near-term model would just rediscover
         FMCSA’s own paperwork instead of finding signal ahead of it.
       </p>
-      <p class="prose">
+        <p>
         Thirteen silent data defects turned up along the way — a grand total read as a fleet size, a
         monthly export that was three files rather than one, a date format that quietly nulled an
         entire vintage. Each now has an automated guardrail and a regression test. That catalogue is
         written up in full in the repository, including the two defects that were in the
         leak-detection code itself.
-      </p>
+        </p>
+      </div>
 
       <a class="repo-link" href={repo}>Read the full write-up and code ↗</a>
     </figure>
@@ -329,11 +332,33 @@ const stats = [
   }
 
   /* ---------- prose ---------- */
+  /* Two columns rather than one narrow measure.
+     A single column capped at 68ch inside a full-width panel leaves half the
+     panel empty and makes it twice as tall as it needs to be. Columns fill the
+     width while keeping each line at a readable length — the constraint that
+     max-width was there to enforce in the first place. */
   .prose {
-    margin: 0 0 var(--space-md);
-    max-width: 68ch;
+    columns: 2;
+    column-gap: var(--space-xl);
     color: var(--ink-secondary);
     text-wrap: pretty;
+  }
+
+  .prose p {
+    margin: 0 0 var(--space-md);
+    /* A paragraph split across the column break is much harder to follow than
+       an uneven column. */
+    break-inside: avoid;
+  }
+
+  .prose p:last-child {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 48rem) {
+    .prose {
+      columns: 1;
+    }
   }
 
   .repo-link {

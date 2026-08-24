@@ -880,14 +880,30 @@ const seriesVar = ['--series-1', '--series-2', '--series-3', '--series-4'];
   }
   .caveat summary:hover { color: var(--ink); }
 
+  /* Columns rather than a capped measure — see the note on .prose in
+     CarrierSurvival. Flex and multi-column are mutually exclusive, so this is
+     block-level with margins doing the spacing flex used to. */
   .caveat__body {
     padding: 0 var(--space-md) var(--space-md);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
+    columns: 2;
+    column-gap: var(--space-xl);
     font-size: var(--step--1);
     color: var(--ink-secondary);
-    max-width: var(--measure);
+  }
+
+  .caveat__body p {
+    margin: 0 0 var(--space-sm);
+    break-inside: avoid;
+  }
+
+  .caveat__body p:last-child {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 48rem) {
+    .caveat__body {
+      columns: 1;
+    }
   }
 
   .netflix__links {

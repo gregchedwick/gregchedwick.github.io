@@ -46,13 +46,21 @@ import { projects } from '../data/projects';
 
             <span class="mini__title">{project.title}</span>
 
+            <span class="mini__blurb">{project.blurb}</span>
+
+            <span class="mini__points">
+              {project.highlights.map((point) => (
+                <span>{point}</span>
+              ))}
+            </span>
+
             <span class="mini__metric">
               <span class="mini__value">{project.metric.value}</span>
               <span class="mini__label">{project.metric.label}</span>
             </span>
 
             <span class="mini__stack">
-              {project.stack.slice(0, 3).map((tech) => (
+              {project.stack.map((tech) => (
                 <span>{tech}</span>
               ))}
             </span>
@@ -62,7 +70,7 @@ import { projects } from '../data/projects';
     </div>
 
     <p class="deck__hint">
-      <span aria-hidden="true">←→</span> Scroll or use arrow keys to compare projects
+      <span aria-hidden="true">←→</span> Scroll the row or use arrow keys to compare projects
     </p>
 
     <div class="panes">
@@ -164,7 +172,7 @@ import { projects } from '../data/projects';
 
   /* ---------- one card ---------- */
   .mini {
-    flex: 0 0 15rem;
+    flex: 0 0 min(30rem, 82vw);
     scroll-snap-align: start;
     display: flex;
     flex-direction: column;
@@ -219,6 +227,39 @@ import { projects } from '../data/projects';
     font-weight: 620;
     line-height: 1.25;
     text-wrap: balance;
+  }
+
+  .mini__blurb {
+    font-size: var(--step--1);
+    line-height: 1.5;
+    color: var(--ink-secondary);
+    text-wrap: pretty;
+  }
+
+  .mini__points {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+    font-size: var(--step--1);
+    line-height: 1.45;
+    color: var(--ink-secondary);
+  }
+
+  .mini__points > span {
+    position: relative;
+    padding-left: var(--space-md);
+  }
+
+  .mini__points > span::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.58em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.55;
   }
 
   .mini__metric {
