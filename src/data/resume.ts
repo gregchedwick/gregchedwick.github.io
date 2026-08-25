@@ -61,7 +61,7 @@ export interface SkillGroup {
 export const profile = {
   name: 'Greg Chedwick',
   shortName: 'Greg',
-  title: 'Senior Data Analyst',
+  title: 'Forward Deployed Engineer',
   company: 'Microsoft',
   location: 'Reno, NV',
   email: 'gregchedwick@outlook.com',
@@ -75,8 +75,9 @@ export const profile = {
     'leading initiatives, across software licensing, mortgage and consumer lending, advertising, ' +
     'supply chain, and freight. I engineer scalable solutions — data modeling, transformation, ' +
     'warehousing, and ETL pipelines in SQL and Python — then build the dashboards and AI-driven ' +
-    'automation that sit on top of them, treating data quality and privacy as requirements rather ' +
-    'than afterthoughts. I do my best work in ambiguous 0-to-1 territory with minimal oversight.',
+    'automation that sit on top of them, embedded with the teams that depend on them and treating ' +
+    'data quality and privacy as requirements rather than afterthoughts. I do my best work in ' +
+    'ambiguous 0-to-1 territory with minimal oversight.',
 } as const;
 
 /** Headline numbers for the stat tiles. Every one is traceable to a role below. */
@@ -137,9 +138,19 @@ export const tenures: Tenure[] = [
     current: true,
     roles: [
       {
+        title: 'Forward Deployed Engineer',
+        team: 'Frontier AI, Business Operations',
+        dates: 'Aug 2026 – Present',
+        achievements: [
+          'Embedded with business teams to design and ship a Dataverse-based intake and workflow platform — automated routing, approvals, and audit history — replacing a fragmented manual process and cutting over in-quarter.',
+          'Root-caused a deployment defect that silently overwrote production configuration on every release, corrupting downstream data with no error surfaced; scripted the remediation across 11 broken connections and restored integrity without a rollback.',
+          'Built AI-assisted automation to synchronize work-tracking state and delivery alerts across systems, replacing recurring manual triage with an automated pipeline.',
+        ],
+      },
+      {
         title: 'Senior Data Analyst',
         team: 'Fusion Development, Operations Service Center',
-        dates: 'Aug 2022 – Present',
+        dates: 'Aug 2022 – Jul 2026',
         achievements: [
           'Engineered scalable licensing data models, automated workflows, and developed Power Apps that automated anniversary and mid-term ordering — saving 4,300+ hours annually and enabling 3x business scaling over two years.',
           'Developed compliance analytics metrics and Power BI dashboards giving visibility into a $3.2B+ agreement portfolio, driving a $106M increase in on-time renewals.',
@@ -256,7 +267,11 @@ export const skillGroups: SkillGroup[] = [
   {
     name: 'Automation & AI',
     skills: [
-      { name: 'Power Automate & Power Apps', years: 7, detail: 'Workflow automation and self-service tools' },
+      {
+        name: 'Power Platform',
+        years: 7,
+        detail: 'Power Apps, Power Automate, Dataverse, solution ALM and deployment pipelines',
+      },
       { name: 'Microsoft Copilot Studio', years: 2, note: 'Recent', detail: 'AI agents, low-code intelligent automation' },
     ],
   },

@@ -142,6 +142,16 @@ export const tech: Tech[] = [
            <path d="M12 7.2 7.8 9.6v4.8L12 16.8l4.2-2.4V9.6L12 7.2Z" fill="currentColor"/>`,
   },
   {
+    name: 'Dataverse',
+    color: '#0a6b5c',
+    colorDark: '#3fb9a3',
+    years: 3,
+    detail: 'Modelled tables, relationships, and solution ALM behind production business apps',
+    icon: `<ellipse cx="12" cy="5.6" rx="7.2" ry="2.9" fill="none" stroke="currentColor" stroke-width="1.8"/>
+           <path d="M4.8 5.6v12.8c0 1.6 3.2 2.9 7.2 2.9s7.2-1.3 7.2-2.9V5.6" fill="none" stroke="currentColor" stroke-width="1.8"/>
+           <path d="M4.8 12c0 1.6 3.2 2.9 7.2 2.9s7.2-1.3 7.2-2.9" fill="none" stroke="currentColor" stroke-width="1.8"/>`,
+  },
+  {
     name: 'Copilot Studio',
     color: '#0b6a86',
     colorDark: '#38b0cf',
