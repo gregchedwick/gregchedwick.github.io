@@ -34,7 +34,13 @@ OUT = SITE_ROOT / "public" / "resume.pdf"
 CONTACT_RE = re.compile(
     r"[^<>]*\|\s*Reno,\s*NV\s*\d{5}\s*\|[^<>]*\|\s*(?P<email>[\w.+-]+@[\w.-]+)[^<>]*"
 )
-REDACTED = "Reno, NV | {email}"
+# The portfolio links survive redaction deliberately: they are public, they are
+# the point of the site, and a recruiter looks for them at the top of page one.
+# Only the street address and phone are removed.
+REDACTED = (
+    "Reno, NV | {email} | gregchedwick.dev"
+    " | linkedin.com/in/gregchedwick | github.com/gregchedwick"
+)
 
 
 def redact(docx_in: Path, docx_out: Path) -> str:
