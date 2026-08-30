@@ -7,6 +7,7 @@ Writes three PNGs into public/:
     og-image.png                 1200x630, the site's own og:image
     social/carrier-survival.png  1280x640, GitHub's repository social preview
     social/netflix-ads.png       1280x640
+    social/resume.png            1200x630, the resume link's own thumbnail
 
 The site had no og:image at all, so every share of gregchedwick.dev rendered as
 a card with no picture — and the twitter:card tag promises a *large* image,
@@ -232,6 +233,73 @@ def netflix_card(d: dict) -> None:
     save(fig, "social/netflix-ads.png")
 
 
+def tenures(resume: str) -> list[tuple[str, int, int]]:
+    """(employer, start year, end year) from resume.ts, most recent first.
+
+    Parsed rather than restated so the card cannot outlive an edit to the data
+    the site itself renders from.
+    """
+    import datetime
+    import re
+
+    out = []
+    for m in re.finditer(
+        r"company: '([^']+)',\s*location: '[^']+',\s*start: '[^']+',\s*end: '[^']+',"
+        r"\s*startYear: (\d+),\s*endYear: ([^,]+),", resume
+    ):
+        end = m.group(3).strip()
+        year = datetime.date.today().year if "Date()" in end else int(end)
+        out.append((m.group(1), int(m.group(2)), year))
+    if not out:
+        raise SystemExit("No tenures parsed from resume.ts — check the shape of the data.")
+    return out
+
+
+# -------------------------------------------------------------- resume card ---
+def resume_card(title: str, spans: list[tuple[str, int, int]]) -> None:
+    """The resume link needs its own thumbnail.
+
+    It shared og-image.png at first, which put two identical pictures at
+    positions one and four of a four-card row — that reads as an oversight
+    rather than a set. This one shows the career arc, which is what the document
+    is actually for.
+    """
+    fig, ax = canvas()
+    x = 0.075
+    first, last = min(s for _, s, _ in spans), max(e for _, _, e in spans)
+
+    ax.text(x, 0.855, "RÉSUMÉ · PDF", fontfamily=MONO, fontsize=13, color=INK3, va="bottom")
+    rule(ax, x, 0.825, 0.075)
+
+    ax.text(x, 0.665, "Greg Chedwick", fontfamily=FAMILY, fontsize=42,
+            color=INK, va="bottom", fontweight="bold")
+    ax.text(x, 0.590, f"{title}  ·  Microsoft", fontfamily=FAMILY, fontsize=21,
+            color=ACCENT, va="bottom")
+    ax.text(x, 0.505, f"{last - first} years across software licensing, lending, advertising,",
+            fontfamily=FAMILY, fontsize=16, color=INK2, va="bottom")
+    ax.text(x, 0.450, "supply chain and freight.", fontfamily=FAMILY, fontsize=16,
+            color=INK2, va="bottom")
+
+    # A tenure bar per employer, on one shared year axis.
+    span = last - first
+    left, width = x, 0.85
+    for i, (name, start, end) in enumerate(reversed(spans)):
+        y = 0.325 - i * 0.078
+        x0 = left + (start - first) / span * width
+        x1 = left + (end - first) / span * width
+        ax.plot([x0, x1], [y, y], color=ACCENT, lw=7, solid_capstyle="butt",
+                alpha=1.0 if end == last else 0.45)
+        ax.text(x0, y + 0.028, name, fontfamily=FAMILY, fontsize=13, color=INK2, va="bottom")
+
+    ax.plot([left, left + width], [0.115, 0.115], color=GRID, lw=1.5)
+    for year in range(first, last + 1, 5):
+        xt = left + (year - first) / span * width
+        ax.text(xt, 0.065, str(year), fontfamily=MONO, fontsize=12, color=INK3, ha="center")
+    ax.text(left + width, 0.065, str(last), fontfamily=MONO, fontsize=12, color=INK3, ha="right")
+
+    save(fig, "social/resume.png")
+
+
 def main() -> None:
     metrics = json.loads(METRICS.read_text(encoding="utf8"))
     netflix = json.loads(NETFLIX.read_text(encoding="utf8"))
@@ -240,6 +308,7 @@ def main() -> None:
 
     print("building link-preview cards:")
     site_card(title)
+    resume_card(title, tenures(resume))
     carrier_card(metrics)
     netflix_card(netflix)
     # Social preview is a REPOSITORY setting, not an account one. The profile
