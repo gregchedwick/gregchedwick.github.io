@@ -2,11 +2,11 @@
 
     python scripts/build_social_cards.py
 
-Writes three 1200x630 PNGs into public/:
+Writes three PNGs into public/:
 
-    og-image.png              the site's own og:image
-    social/carrier-survival.png
-    social/netflix-ads.png
+    og-image.png                 1200x630, the site's own og:image
+    social/carrier-survival.png  1280x640, GitHub's repository social preview
+    social/netflix-ads.png       1280x640
 
 The site had no og:image at all, so every share of gregchedwick.dev rendered as
 a card with no picture — and the twitter:card tag promises a *large* image,
@@ -52,11 +52,17 @@ ACCENT2 = "#eb6834"
 FAMILY = ["Segoe UI", "DejaVu Sans"]
 MONO = ["Cascadia Mono", "Consolas", "DejaVu Sans Mono"]
 
-W, H = 12.0, 6.3  # inches at dpi 100 -> 1200x630, the size every platform wants
+# Two sizes, because the destinations disagree. 1200x630 is the Open Graph
+# convention the site's own card follows; GitHub asks for 1280x640 (a true 2:1)
+# for its repository social preview and will letterbox anything else. The layout
+# is expressed in figure-relative coordinates, so both render from one spec.
+OG = (12.0, 6.30)      # 1200x630 at dpi 100
+GITHUB = (12.8, 6.40)  # 1280x640
+W, H = OG
 
 
-def canvas():
-    fig = plt.figure(figsize=(W, H), dpi=100)
+def canvas(size=None):
+    fig = plt.figure(figsize=size or OG, dpi=100)
     fig.patch.set_facecolor(PAGE)
     ax = fig.add_axes([0, 0, 1, 1])
     ax.set_xlim(0, 1)
@@ -120,7 +126,7 @@ def site_card(profile_title: str) -> None:
 
 # ------------------------------------------------------------- carrier card ---
 def carrier_card(m: dict) -> None:
-    fig, ax = canvas()
+    fig, ax = canvas(GITHUB)
     x = 0.06
     gains = m["gains"]
     ten = round(gains["top_10pct"] * 100)
@@ -176,7 +182,7 @@ def carrier_card(m: dict) -> None:
 
 # ------------------------------------------------------------- netflix card ---
 def netflix_card(d: dict) -> None:
-    fig, ax = canvas()
+    fig, ax = canvas(GITHUB)
     x = 0.06
     ranked = d["titleCount"]
 
@@ -232,12 +238,16 @@ def main() -> None:
     resume = (SITE / "src" / "data" / "resume.ts").read_text(encoding="utf8")
     title = resume.split("title: '", 1)[1].split("'", 1)[0]
 
-    print("building link-preview cards (1200x630):")
+    print("building link-preview cards:")
     site_card(title)
     carrier_card(metrics)
     netflix_card(netflix)
-    print("\nUpload the two social/ cards to each repo under Settings -> Social preview,")
-    print("and use the same files as LinkedIn Featured thumbnails.")
+    # Social preview is a REPOSITORY setting, not an account one. The profile
+    # page's "Social accounts" field is a different thing entirely — five links,
+    # no image.
+    print("\nThe two social/ cards go on each REPOSITORY:")
+    print("  github.com/gregchedwick/<repo> -> Settings -> General -> Social preview")
+    print("The same files work as LinkedIn Featured thumbnails.")
 
 
 if __name__ == "__main__":
