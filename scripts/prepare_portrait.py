@@ -4,11 +4,16 @@ Run from the site repo root:
 
     python scripts/prepare_portrait.py
 
-This is a crop and nothing else. The master is already evenly lit with a
-charcoal jacket and a neutral backdrop, so no colour work is needed — an
-earlier headshot required temple-cast correction and a garment recolour, and
-that code is gone rather than left lying around unused. Recover it from git
-history if a future photo ever needs it.
+This is a crop and nothing else. The master is evenly lit with a navy suit,
+white collar and a neutral backdrop, so no colour work is needed — an earlier
+headshot required temple-cast correction and a garment recolour, and that code
+is gone rather than left lying around unused. Recover it from git history if a
+future photo ever needs it.
+
+The master moved from Greg.jpg to Greg 5.jpg: same frame, same pose, but the
+real suit rather than a recoloured one. The crop below did not need retuning —
+row 0 carries the same 276 hair pixels across x 347-622 in both files, which is
+how the geometry was confirmed to carry over rather than assumed to.
 
 The crop is deliberately NOT upscaled: the master is 1056x976, so a 4:5 crop
 tops out around 725x907. Astro generates 320/480/640-wide variants from this
@@ -23,7 +28,7 @@ from pathlib import Path
 from PIL import Image
 
 SITE_ROOT = Path(__file__).resolve().parents[1]
-MASTER = Path.home() / "OneDrive" / "Pictures" / "Greg.jpg"
+MASTER = Path.home() / "OneDrive" / "Pictures" / "Greg 5.jpg"
 OUT = SITE_ROOT / "src" / "assets" / "portrait.jpeg"
 
 # 4:5 crop against the 1056x976 master, using the full height of the source.
